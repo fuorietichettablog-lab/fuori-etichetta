@@ -1,0 +1,1262 @@
+/* ==========================================================================
+   FUORI ETICHETTA — DESIGN SYSTEM "CUPERTINO EDITORIAL" (APPLE STYLE)
+   Monocromatico rigoroso, card compatte, mobile-first per iPhone e Desktop
+   ========================================================================== */
+
+:root {
+    --bg-page: #F5F5F7;           /* Grigio ghiaccio Apple */
+    --bg-card: #FFFFFF;           /* Bianco puro per le card */
+    --bg-glass: rgba(255, 255, 255, 0.82);
+    --text-primary: #1D1D1F;      /* Nero antracite Apple */
+    --text-secondary: #6E6E73;    /* Grigio medio ad alto contrasto */
+    --text-muted: #86868B;        /* Grigio metadati */
+    --border-subtle: #E5E5EA;     /* Bordo iOS 1px */
+    --border-hover: #C7C7CC;
+    --accent-black: #1D1D1F;      /* Bottoni primari monocromatici */
+    --accent-hover: #000000;
+    --surface-pill: #EFEFF4;      /* Sfondo pillole e filtri */
+    --danger: #D70015;            /* Rosso sistema Apple per eliminazioni/segnalazioni */
+    --danger-bg: #FFF2F4;
+    --radius-sm: 10px;
+    --radius-md: 16px;
+    --radius-lg: 22px;
+    --radius-pill: 999px;
+    --shadow-card: 0 2px 10px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 8px 24px rgba(0, 0, 0, 0.07);
+    --shadow-modal: 0 20px 50px rgba(0, 0, 0, 0.16);
+    --transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html, body {
+    background-color: var(--bg-page);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* ==========================================================================
+   HEADER GLASSMORPHISM (STILE APPLE)
+   ========================================================================== */
+.site-header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg-glass);
+    backdrop-filter: saturate(180%) blur(20px);
+    -webkit-backdrop-filter: saturate(180%) blur(20px);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.header-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.brand-logo {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 700;
+    font-size: 1.05rem;
+    letter-spacing: 0.08em;
+    color: var(--text-primary);
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.brand-dot {
+    width: 9px;
+    height: 9px;
+    background-color: var(--text-primary);
+    border-radius: 50%;
+    display: inline-block;
+}
+
+/* Categorie a pillola */
+.category-nav {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+.category-nav::-webkit-scrollbar {
+    display: none;
+}
+
+.cat-pill {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 6px 14px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+.cat-pill:hover {
+    color: var(--text-primary);
+    background: var(--surface-pill);
+}
+
+.cat-pill.active {
+    background: var(--accent-black);
+    color: #FFFFFF;
+}
+
+/* Ricerca e Azioni Utente */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.search-icon {
+    position: absolute;
+    left: 11px;
+    width: 15px;
+    height: 15px;
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.search-input {
+    background: var(--surface-pill);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 7px 14px 7px 32px;
+    font-size: 0.86rem;
+    color: var(--text-primary);
+    width: 190px;
+    transition: var(--transition);
+}
+
+.search-input:focus {
+    outline: none;
+    background: #FFFFFF;
+    border-color: var(--border-hover);
+    width: 230px;
+}
+
+/* Mini-Profilo Stile iSpazio */
+.user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-pill);
+    border: 1px solid var(--border-subtle);
+    padding: 4px 12px 4px 4px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.user-chip:hover {
+    background: #E5E5EA;
+}
+
+.user-chip-avatar {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: #D1D1D6;
+}
+
+.user-chip-name {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    max-width: 110px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   BOTTONI E CONTROLLI COMUNI
+   ========================================================================== */
+.btn-primary {
+    background: var(--accent-black);
+    color: #FFFFFF;
+    border: none;
+    border-radius: var(--radius-pill);
+    padding: 8px 18px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}
+
+.btn-primary:hover {
+    background: var(--accent-hover);
+    transform: translateY(-1px);
+}
+
+.btn-secondary {
+    background: var(--surface-pill);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-pill);
+    padding: 7px 15px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-secondary:hover {
+    background: #E5E5EA;
+}
+
+.btn-danger {
+    background: var(--danger-bg);
+    color: var(--danger);
+    border: 1px solid rgba(215, 0, 21, 0.2);
+    border-radius: var(--radius-pill);
+    padding: 7px 15px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.btn-danger:hover {
+    background: var(--danger);
+    color: #FFFFFF;
+}
+
+.btn-sm {
+    padding: 5px 12px;
+    font-size: 0.8rem;
+}
+
+.btn-full {
+    width: 100%;
+    padding: 11px 18px;
+}
+
+.badge-alert {
+    background: var(--danger);
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: var(--radius-pill);
+}
+
+/* ==========================================================================
+   CATALOGO COMPATTO (HOMEPAGE) — MINIATURE CLICCABILI AD ALTA DENSITÀ
+   ========================================================================== */
+.main-container {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 28px 20px 60px;
+    min-height: calc(100vh - 140px);
+}
+
+.catalog-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 22px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.catalog-title {
+    font-size: 1.65rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+}
+
+.catalog-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.92rem;
+    margin-top: 2px;
+}
+
+.count-pill {
+    background: var(--surface-pill);
+    color: var(--text-secondary);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 4px 11px;
+    border-radius: var(--radius-pill);
+}
+
+/* Griglia compatta a 4 colonne su Desktop per mostrare tanti articoli subito */
+.articles-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
+    gap: 18px;
+}
+
+.article-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-card);
+    transition: var(--transition);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+}
+
+.article-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-hover);
+    border-color: var(--border-hover);
+}
+
+/* Miniatura compatta e nitida */
+.card-thumb-wrapper {
+    position: relative;
+    width: 100%;
+    height: 185px;
+    background: #EFEFF4;
+    overflow: hidden;
+}
+
+.card-thumb {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.35s ease;
+}
+
+.article-card:hover .card-thumb {
+    transform: scale(1.03);
+}
+
+/* Indicatore sulla miniatura se ci sono cerchietti "Shop the Look" */
+.card-shop-badge {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(29, 29, 31, 0.82);
+    backdrop-filter: blur(8px);
+    color: #FFFFFF;
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 4px 9px;
+    border-radius: var(--radius-pill);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.card-body {
+    padding: 14px 16px 16px;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+}
+
+.card-meta {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+}
+
+.badge-category {
+    background: var(--surface-pill);
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.card-title {
+    font-size: 1.02rem;
+    font-weight: 700;
+    line-height: 1.35;
+    margin-bottom: 6px;
+    color: var(--text-primary);
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.card-excerpt {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 14px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    flex-grow: 1;
+}
+
+.card-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 10px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.card-stats {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.card-read-more {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* ==========================================================================
+   PAGINA SINGOLO ARTICOLO & CERCHIETTI INTERATTIVI SUI VESTITI (HOTSPOTS)
+   ========================================================================== */
+#view-article {
+    max-width: 780px;
+    margin: 0 auto;
+}
+
+.article-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.btn-back {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-pill);
+    padding: 7px 14px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.btn-back:hover {
+    background: var(--surface-pill);
+}
+
+.article-header {
+    margin-bottom: 22px;
+}
+
+.article-meta-top {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    color: var(--text-muted);
+    font-size: 0.85rem;
+}
+
+.article-main-title {
+    font-size: 2.1rem;
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin-bottom: 10px;
+}
+
+.article-lead {
+    font-size: 1.08rem;
+    color: var(--text-secondary);
+    line-height: 1.5;
+}
+
+/* Immagine e Cerchietti Shop the Look */
+.interactive-media-wrapper {
+    margin-bottom: 26px;
+}
+
+.interactive-image-container {
+    position: relative;
+    width: 100%;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: #EFEFF4;
+    border: 1px solid var(--border-subtle);
+    line-height: 0;
+}
+
+.article-main-image {
+    width: 100%;
+    max-height: 620px;
+    object-fit: cover;
+    display: block;
+}
+
+.hotspots-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+/* Il Cerchietto Pulsante sul Vestito */
+.hotspot-pin {
+    position: absolute;
+    transform: translate(-50%, -50%);
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid var(--text-primary);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+    cursor: pointer;
+    pointer-events: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease;
+    z-index: 10;
+}
+
+.hotspot-pin::after {
+    content: '';
+    width: 8px;
+    height: 8px;
+    background: var(--text-primary);
+    border-radius: 50%;
+}
+
+.hotspot-pin:hover {
+    transform: translate(-50%, -50%) scale(1.18);
+}
+
+/* Cartellino (Popover) con Link al Sito Originale del Vestito */
+.hotspot-card {
+    position: absolute;
+    bottom: calc(100% + 10px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(29, 29, 31, 0.94);
+    backdrop-filter: blur(12px);
+    color: #FFFFFF;
+    padding: 8px 12px;
+    border-radius: 12px;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    line-height: 1.3;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+    z-index: 20;
+}
+
+.hotspot-card-title {
+    font-weight: 600;
+}
+
+.hotspot-card-cta {
+    background: #FFFFFF;
+    color: var(--text-primary);
+    font-weight: 700;
+    font-size: 0.72rem;
+    padding: 3px 7px;
+    border-radius: 6px;
+}
+
+.hotspot-hint {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    padding: 8px 14px;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--border-subtle);
+}
+
+.pulse-dot-mini {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--text-primary);
+    display: inline-block;
+}
+
+.article-body-content {
+    background: var(--bg-card);
+    padding: 28px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    font-size: 1.03rem;
+    line-height: 1.75;
+    color: var(--text-primary);
+    white-space: pre-line;
+    margin-bottom: 20px;
+}
+
+/* Barra Like Articolo */
+.article-engagement-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--bg-card);
+    padding: 14px 20px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-subtle);
+    margin-bottom: 32px;
+}
+
+.btn-like-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--surface-pill);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 18px;
+    border-radius: var(--radius-pill);
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-like-pill.liked {
+    background: var(--text-primary);
+    color: #FFFFFF;
+    border-color: var(--text-primary);
+}
+
+.btn-like-pill.liked .heart-icon {
+    fill: #FFFFFF;
+}
+
+.like-counter {
+    background: rgba(0, 0, 0, 0.08);
+    padding: 2px 8px;
+    border-radius: var(--radius-pill);
+    font-size: 0.8rem;
+}
+
+.btn-like-pill.liked .like-counter {
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* ==========================================================================
+   COMMENTI STILE iSPAZIO (SOLO NOME E FOTO + LIKE/DISLIKE + SEGNALA)
+   ========================================================================== */
+.comments-section {
+    margin-top: 20px;
+}
+
+.comments-header {
+    margin-bottom: 16px;
+}
+
+.comments-title {
+    font-size: 1.3rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comment-compose-card, .comment-login-prompt {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 16px;
+    margin-bottom: 20px;
+}
+
+.comment-login-prompt {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.comment-compose-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+}
+
+.comment-rules-hint {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+
+.comments-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.comment-item {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+}
+
+.comment-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.comment-author {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.comment-avatar {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    object-fit: cover;
+    background: var(--surface-pill);
+    border: 1px solid var(--border-subtle);
+}
+
+.comment-author-name {
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.badge-admin-tag {
+    background: var(--text-primary);
+    color: #FFFFFF;
+    font-size: 0.68rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-left: 4px;
+}
+
+.comment-date {
+    font-size: 0.76rem;
+    color: var(--text-muted);
+}
+
+.comment-text {
+    font-size: 0.93rem;
+    color: var(--text-primary);
+    line-height: 1.5;
+    margin-bottom: 12px;
+    white-space: pre-line;
+}
+
+.comment-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-vote {
+    background: var(--surface-pill);
+    border: 1px solid transparent;
+    border-radius: var(--radius-pill);
+    padding: 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: var(--transition);
+}
+
+.btn-vote.active-vote {
+    background: var(--text-primary);
+    color: #FFFFFF;
+}
+
+.btn-report-comment {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 0.76rem;
+    cursor: pointer;
+    margin-left: auto;
+}
+
+.btn-report-comment:hover {
+    color: var(--danger);
+    text-decoration: underline;
+}
+
+/* ==========================================================================
+   MODALI (AUTH, PROFILO, HOTSPOT) & FORM
+   ========================================================================== */
+.modal-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+}
+
+.modal-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    padding: 24px;
+    box-shadow: var(--shadow-modal);
+    max-height: 92vh;
+    overflow-y: auto;
+}
+
+.modal-sm {
+    max-width: 400px;
+}
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 18px;
+}
+
+.modal-header h2 {
+    font-size: 1.25rem;
+    font-weight: 700;
+}
+
+.btn-icon-close {
+    background: var(--surface-pill);
+    border: none;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Segmented Control stile iOS */
+.auth-Segmented-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--surface-pill);
+    padding: 3px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 18px;
+}
+
+.segment-btn {
+    border: none;
+    background: transparent;
+    padding: 7px;
+    font-size: 0.86rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.segment-btn.active {
+    background: #FFFFFF;
+    color: var(--text-primary);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+
+.form-group {
+    margin-bottom: 14px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 0.82rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    color: var(--text-primary);
+}
+
+.form-group label small {
+    font-weight: 400;
+    color: var(--text-muted);
+}
+
+.form-row-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.input-field {
+    width: 100%;
+    padding: 10px 12px;
+    background: var(--bg-page);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-sm);
+    font-size: 0.92rem;
+    font-family: inherit;
+    color: var(--text-primary);
+}
+
+.input-field:focus {
+    outline: none;
+    background: #FFFFFF;
+    border-color: var(--text-primary);
+}
+
+.privacy-note, .field-help {
+    font-size: 0.78rem;
+    color: var(--text-secondary);
+    line-height: 1.45;
+    margin-bottom: 14px;
+}
+
+.auth-extra-links {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 14px;
+}
+
+.link-button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+.profile-avatar-editor {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.profile-avatar-large {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 1px solid var(--border-subtle);
+    background: var(--surface-pill);
+}
+
+.profile-readonly-info {
+    background: var(--bg-page);
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    font-size: 0.82rem;
+    margin-bottom: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* ==========================================================================
+   PANNELLO ADMIN E EDITOR VISUALE HOTSPOTS
+   ========================================================================== */
+.admin-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.admin-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+}
+
+.admin-tab {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    font-size: 0.86rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.admin-tab.active {
+    background: var(--text-primary);
+    color: #FFFFFF;
+}
+
+.admin-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--radius-md);
+    padding: 24px;
+}
+
+.upload-controls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+}
+
+.admin-preview-cursor {
+    cursor: crosshair;
+}
+
+.admin-hotspots-list-box {
+    margin-top: 14px;
+    background: var(--bg-page);
+    padding: 14px;
+    border-radius: var(--radius-sm);
+}
+
+.admin-hotspots-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.admin-hotspot-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #FFFFFF;
+    padding: 8px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border-subtle);
+    font-size: 0.84rem;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-group label {
+    margin-bottom: 0;
+}
+
+.admin-form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.admin-list-container {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.admin-list-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px 14px;
+    background: var(--bg-page);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+}
+
+/* ==========================================================================
+   STATI CARICAMENTO, TOAST E FOOTER
+   ========================================================================== */
+.loading-state, .empty-state {
+    text-align: center;
+    padding: 50px 20px;
+    color: var(--text-secondary);
+}
+
+.spinner {
+    width: 28px;
+    height: 28px;
+    border: 3px solid var(--border-subtle);
+    border-top-color: var(--text-primary);
+    border-radius: 50%;
+    animation: spin 0.75s linear infinite;
+    margin: 0 auto 12px;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.toast-container {
+    position: fixed;
+    bottom: 22px;
+    right: 22px;
+    z-index: 300;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.toast {
+    background: rgba(29, 29, 31, 0.94);
+    backdrop-filter: blur(12px);
+    color: #FFFFFF;
+    padding: 11px 18px;
+    border-radius: 12px;
+    font-size: 0.86rem;
+    font-weight: 500;
+    box-shadow: var(--shadow-hover);
+}
+
+.site-footer {
+    border-top: 1px solid var(--border-subtle);
+    background: var(--bg-card);
+    padding: 24px 20px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+}
+
+.footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   RESPONSIVE DESIGN: OTTIMIZZAZIONE SPECIFICA PER IPHONE E SMARTPHONE
+   ========================================================================== */
+@media (max-width: 768px) {
+    .header-inner {
+        padding: 10px 14px;
+        gap: 10px;
+    }
+
+    .category-nav {
+        order: 3;
+        width: 100%;
+        padding-top: 6px;
+        border-top: 1px solid var(--border-subtle);
+    }
+
+    .search-input {
+        width: 135px;
+    }
+    .search-input:focus {
+        width: 165px;
+    }
+
+    /* Su iPhone: Card compatte orizzontali con miniatura laterale cliccabile! */
+    .articles-grid {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .article-card {
+        flex-direction: row;
+        align-items: stretch;
+        min-height: 118px;
+    }
+
+    .card-thumb-wrapper {
+        width: 115px;
+        min-width: 115px;
+        height: auto;
+    }
+
+    .card-shop-badge span {
+        display: none;
+    }
+
+    .card-body {
+        padding: 10px 12px;
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+        margin-bottom: 4px;
+    }
+
+    .card-excerpt {
+        -webkit-line-clamp: 1;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+    }
+
+    .article-main-title {
+        font-size: 1.55rem;
+    }
+
+    .article-body-content {
+        padding: 18px;
+    }
+
+    .form-row-2 {
+        grid-template-columns: 1fr;
+    }
+}
