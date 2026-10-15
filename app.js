@@ -2,14 +2,12 @@
  * ============================================================================
  * FUORI ETICHETTA — CORE APPLICATION LOGIC (SUPABASE FULL-STACK)
  * ============================================================================
- * ISTRUZIONI: Sostituisci SUPABASE_URL e SUPABASE_ANON_KEY qui sotto
- * con i due valori del tuo progetto Supabase (Project Settings -> API).
  */
 
-const SUPABASE_URL = 'https://obgewehjfngyppzkwgdd.supabase.co/rest/v1/';
+const SUPABASE_URL = 'https://obgewehjfngyppzkwgdd.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_1XyAu_ImadBP_EYVOliNnw_WDaf7enC';
 
-// Inizializzazione Client Supabase
+// Inizializzazione unica del Client Supabase
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Stato Globale dell'Applicazione
@@ -66,6 +64,7 @@ function getDefaultAvatar(name) {
 
 function showToast(message) {
     const container = document.getElementById('toast-container');
+    if (!container) return;
     const toast = document.createElement('div');
     toast.className = 'toast';
     toast.textContent = message;
@@ -150,7 +149,7 @@ async function uploadMediaToSupabase(file, folder = 'articles') {
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // Imposta data massima nel calendario di registrazione (16 anni fa da oggi)
+    // 1. Imposta data massima nel calendario di registrazione (16 anni fa da oggi)
     const birthInput = document.getElementById('reg-birthdate');
     if (birthInput) {
         const maxDate = new Date();
@@ -158,28 +157,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         birthInput.max = maxDate.toISOString().split('T')[0];
     }
 
+    // 2. Collega immediatamente tutti i pulsanti dell'interfaccia (incluso "Accedi")
     bindUIEvents();
 
-    // Verifica configurazione chiavi
+    // 3. Verifica configurazione chiavi
     if (SUPABASE_URL.includes('INSERISCI_QUI')) {
-        document.getElementById('catalog-loading').innerHTML = `
-            <div class="admin-card" style="max-width:560px; margin:0 auto; text-align:left;">
-                <h3>⚙️ Configurazione Iniziale Richiesta</h3>
-                <p style="margin-top:8px;">Apri il file <strong>app.js</strong> e inserisci il tuo <code>SUPABASE_URL</code> e la tua <code>SUPABASE_ANON_KEY</code> nelle prime due righe per collegare il database.</p>
-            </div>`;
+        const loadingEl = document.getElementById('catalog-loading');
+        if (loadingEl) {
+            loadingEl.innerHTML = `
+                <div class="admin-card" style="max-width:560px; margin:0 auto; text-align:left;">
+                    <h3>⚙️ Configurazione Iniziale Richiesta</h3>
+                    <p style="margin-top:8px;">Apri il file <strong>app.js</strong> e inserisci il tuo <code>SUPABASE_URL</code> e la tua <code>SUPABASE_ANON_KEY</code> nelle prime due righe per collegare il database.</p>
+                </div>`;
+        }
         return;
     }
 
-    // Listener stato sessione Auth (incluso il link di recupero password dall'email)
+    // 4. Carica sessione iniziale e articoli con gestione errori garantita
+    try {
+        const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError) {
+            console.error('Errore lettura sessione:', sessionError);
+        }
+        await refreshUserSession(session?.user || null);
+    } catch (err) {
+        console.error('Errore imprevisto durante il recupero sessione:', err);
+    }
+
+    // 5. Listener per i cambi di stato successivi (login, logout, recupero password)
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
+        if (event === 'INITIAL_SESSION') return; // Già gestito al punto 4
         if (event === 'PASSWORD_RECOVERY') {
             openAuthModal('update-password');
         }
         await refreshUserSession(session?.user || null);
     });
 
-    const { data: { session } } = await supabaseClient.auth.getSession();
-    await refreshUserSession(session?.user || null);
+    // 6. Carica il catalogo articoli
     await loadCatalogArticles();
 });
 
@@ -200,42 +214,50 @@ async function refreshUserSession(user) {
         return;
     }
 
-    // Carica profilo privato dal DB
-    const { data: profile, error } = await supabaseClient
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    try {
+        // Carica profilo privato dal DB
+        const { data: profile, error } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', user.id)
+            .single();
 
-    if (error || !profile) {
+        if (error || !profile) {
+            btnOpenAuth.classList.remove('hidden');
+            btnOpenProfile.classList.add('hidden');
+            btnOpenAdmin.classList.add('hidden');
+            updateCommentBoxVisibility();
+            return;
+        }
+
+        if (profile.is_banned) {
+            await supabaseClient.auth.signOut();
+            showToast('Il tuo account è stato sospeso dalla moderazione.');
+            return;
+        }
+
+        state.currentProfile = profile;
+        state.isAdmin = profile.role === 'admin';
+
+        // Aggiorna Header stile iSpazio (Nome + Foto Profilo)
+        btnOpenAuth.classList.add('hidden');
+        btnOpenProfile.classList.remove('hidden');
+        document.getElementById('header-user-name').textContent = profile.first_name;
+        document.getElementById('header-user-avatar').src = profile.avatar_url || getDefaultAvatar(profile.first_name);
+
+        if (state.isAdmin) {
+            btnOpenAdmin.classList.remove('hidden');
+            refreshAdminReportBadge();
+        } else {
+            btnOpenAdmin.classList.add('hidden');
+        }
+
+        updateCommentBoxVisibility();
+    } catch (err) {
+        console.error('Errore caricamento profilo utente:', err);
         btnOpenAuth.classList.remove('hidden');
         btnOpenProfile.classList.add('hidden');
-        return;
     }
-
-    if (profile.is_banned) {
-        await supabaseClient.auth.signOut();
-        showToast('Il tuo account è stato sospeso dalla moderazione.');
-        return;
-    }
-
-    state.currentProfile = profile;
-    state.isAdmin = profile.role === 'admin';
-
-    // Aggiorna Header stile iSpazio (Nome + Foto Profilo)
-    btnOpenAuth.classList.add('hidden');
-    btnOpenProfile.classList.remove('hidden');
-    document.getElementById('header-user-name').textContent = profile.first_name;
-    document.getElementById('header-user-avatar').src = profile.avatar_url || getDefaultAvatar(profile.first_name);
-
-    if (state.isAdmin) {
-        btnOpenAdmin.classList.remove('hidden');
-        refreshAdminReportBadge();
-    } else {
-        btnOpenAdmin.classList.add('hidden');
-    }
-
-    updateCommentBoxVisibility();
 }
 
 // ============================================================================
@@ -245,29 +267,36 @@ async function refreshUserSession(user) {
 async function loadCatalogArticles() {
     const loadingEl = document.getElementById('catalog-loading');
     const gridEl = document.getElementById('articles-grid');
-    loadingEl.classList.remove('hidden');
-    gridEl.innerHTML = '';
+    if (loadingEl) loadingEl.classList.remove('hidden');
+    if (gridEl) gridEl.innerHTML = '';
 
-    const { data: articles, error } = await supabaseClient
-        .from('articles')
-        .select(`
-            *,
-            article_likes(count),
-            comments(count)
-        `)
-        .eq('published', true)
-        .order('created_at', { ascending: false });
+    try {
+        const { data: articles, error } = await supabaseClient
+            .from('articles')
+            .select(`
+                *,
+                article_likes(count),
+                comments(count)
+            `)
+            .eq('published', true)
+            .order('created_at', { ascending: false });
 
-    loadingEl.classList.add('hidden');
-
-    if (error) {
-        showToast('Errore nel caricamento degli articoli.');
-        console.error(error);
-        return;
+        if (error) {
+            showToast('Errore nel caricamento degli articoli.');
+            console.error('Errore query articoli:', error);
+            state.articles = [];
+        } else {
+            state.articles = articles || [];
+        }
+    } catch (err) {
+        showToast('Impossibile contattare il server degli articoli.');
+        console.error('Eccezione caricamento articoli:', err);
+        state.articles = [];
+    } finally {
+        // Garantisce che il caricamento termini SEMPRE, anche in caso di errore
+        if (loadingEl) loadingEl.classList.add('hidden');
+        renderCatalogGrid();
     }
-
-    state.articles = articles || [];
-    renderCatalogGrid();
 }
 
 function renderCatalogGrid() {
@@ -388,8 +417,8 @@ function renderArticleHotspots(hotspots) {
     hotspots.forEach((spot) => {
         const pin = document.createElement('div');
         pin.className = 'hotspot-pin';
-        pin.style.left = `${ Number(spot.x).toFixed(2) }%`;
-        pin.style.top = `${ Number(spot.y).toFixed(2) }%`;
+        pin.style.left = `${Number(spot.x).toFixed(2)}%`;
+        pin.style.top = `${Number(spot.y).toFixed(2)}%`;
         pin.title = `${spot.label} — Clicca per aprire il sito ufficiale`;
 
         // Cartellino con nome capo e apertura diretta del sito ufficiale
@@ -632,7 +661,7 @@ async function handleCommentReport(commentId) {
         return;
     }
 
-    const reason = prompt('Indica brevemente il motivo della segnalazione (es. Spam, Offensivo):', ' linguaggi inappropriati / spam');
+    const reason = prompt('Indica brevemente il motivo della segnalazione (es. Spam, Offensivo):', 'linguaggi inappropriati / spam');
     if (!reason) return;
 
     const { error } = await supabaseClient.from('comment_reports').insert({
@@ -768,7 +797,6 @@ function populateAdminEditorForEdit(article) {
     document.getElementById('admin-article-title').value = article.title;
     document.getElementById('admin-article-category').value = article.category;
     document.getElementById('admin-article-excerpt').value = article.excerpt;
-    document.getElementById('admin-article- image-url');
     document.getElementById('admin-image-url').value = article.cover_image;
     document.getElementById('admin-article-content').value = article.content;
     document.getElementById('admin-article-published').checked = article.published;
@@ -1085,19 +1113,19 @@ function bindUIEvents() {
             return;
         }
 
-       const { error } = await supabaseClient.auth.signUp({
-        email,
-        password,
-        options: {
-            data: {
-                first_name: firstName,
-                last_name: lastName,
-                phone: phone,
-                birth_date: birthDate,
-                avatar_url: ''
+        const { error } = await supabaseClient.auth.signUp({
+            email,
+            password,
+            options: {
+                data: {
+                    first_name: firstName,
+                    last_name: lastName,
+                    phone: phone,
+                    birth_date: birthDate,
+                    avatar_url: ''
+                }
             }
-        }
-    });
+        });
 
         if (error) {
             showToast(`Errore registrazione: ${error.message}`);
@@ -1108,19 +1136,11 @@ function bindUIEvents() {
         showToast('Registrazione completata! Controlla la tua email per cliccare il link di verifica.');
     });
 
-// Recupero Password via Email
+    // Recupero Password via Email
     document.getElementById('form-reset-request').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('reset-email').value.trim();
         const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
-        
-        if (error) {
-            showToast(`Errore: ${error.message}`);
-            return;
-        }
-        document.getElementById('modal-auth').classList.add('hidden');
-        showToast('Ti abbiamo inviato un\'email con il link per reimpostare la password.');
-    });
         if (error) {
             showToast(`Errore: ${error.message}`);
             return;
