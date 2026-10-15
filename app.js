@@ -1089,7 +1089,7 @@ function bindUIEvents() {
             email,
             password,
             options: {
-                emailRedirectTo: window.location.origin,
+                emailRedirectTo: 'https://fuorietichettablog-lab.github.io/fuori-etichetta',
                 data: {
                     first_name: firstName,
                     last_name: lastName,
