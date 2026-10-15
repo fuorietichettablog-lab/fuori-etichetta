@@ -1,6 +1,10 @@
 /**
  * ============================================================================
  * FUORI ETICHETTA — CORE APPLICATION LOGIC (SUPABASE FULL-STACK)
+ * Versione completa con:
+ * - Opzione A (Carosello stile Instagram per categoria "Outfit")
+ * - Opzione B (Galleria Foto + Player Video sotto l'articolo per "Novità", "Trend", "Consigli")
+ * - Retrocompatibilità totale col DB Supabase senza bisogno di nuove colonne
  * ============================================================================
  */
 
@@ -19,12 +23,16 @@ const state = {
     currentCategory: 'all',
     searchQuery: '',
     activeArticle: null,
-    editorHotspots: [],      // Cerchietti temporanei durante la creazione/modifica articolo
-    pendingHotspotCoords: null
+    editorHotspots: [],      // Cerchietti sui vestiti (Slide 1)
+    editorGallery: [],       // URL delle foto aggiuntive
+    editorVideoUrl: '',      // URL del video (YouTube, Vimeo o MP4 su Supabase)
+    pendingHotspotCoords: null,
+    carouselIndex: 0,
+    carouselSlides: []
 };
 
 // ============================================================================
-// UTILITÀ DI SICUREZZA E FORMATTAZIONE (Sanitizzazione XSS & Immagini)
+// UTILITÀ DI SICUREZZA, FORMATTAZIONE E PARSING MEDIA
 // ============================================================================
 
 function escapeHTML(str) {
@@ -74,7 +82,6 @@ function showToast(message) {
     }, 3800);
 }
 
-// Verifica matematica >= 16 anni lato Frontend (Doppio controllo oltre al DB)
 function isAtLeast16YearsOld(birthDateString) {
     if (!birthDateString) return false;
     const birth = new Date(birthDateString);
@@ -85,6 +92,99 @@ function isAtLeast16YearsOld(birthDateString) {
         age--;
     }
     return age >= 16;
+}
+
+/**
+ * Estrae in modo sicuro Cerchietti (pins), Foto Extra (gallery) e Video (videoUrl)
+ * dal campo JSON `hotspots` del database (o da colonne dedicate se presenti).
+ */
+function parseArticleMedia(article) {
+    const raw = Array.isArray(article?.hotspots) ? article.hotspots : [];
+    const pins = [];
+    const gallery = [];
+    let videoUrl = article?.video_url || '';
+
+    raw.forEach((item) => {
+        if (!item || typeof item !== 'object') return;
+        if (item.type === 'media_photo' && item.url) {
+            gallery.push(item.url);
+        } else if (item.type === 'media_video' && item.url) {
+            videoUrl = item.url;
+        } else if (typeof item.x === 'number' && typeof item.y === 'number') {
+            pins.push(item);
+        }
+    });
+
+    if (Array.isArray(article?.extra_images)) {
+        article.extra_images.forEach((url) => {
+            if (url && !gallery.includes(url)) gallery.push(url);
+        });
+    }
+
+    return { pins, gallery, videoUrl };
+}
+
+/**
+ * Impacchetta Cerchietti + Foto Extra + Video dentro l'array JSON `hotspots`
+ * così Supabase lo salva senza richiedere nuove colonne SQL.
+ */
+function packArticleMedia(pins, gallery, videoUrl) {
+    const packed = [];
+    (pins || []).forEach((p) => {
+        packed.push({
+            x: Number(p.x),
+            y: Number(p.y),
+            label: p.label,
+            url: p.url
+        });
+    });
+    (gallery || []).forEach((url) => {
+        if (url && typeof url === 'string') {
+            packed.push({ type: 'media_photo', url: url.trim() });
+        }
+    });
+    if (videoUrl && typeof videoUrl === 'string' && videoUrl.trim() !== '') {
+        packed.push({ type: 'media_video', url: videoUrl.trim() });
+    }
+    return packed;
+}
+
+/**
+ * Costruisce il player HTML per qualsiasi URL video (YouTube, Shorts, Vimeo o file MP4/WebM/MOV)
+ */
+function buildVideoPlayerHTML(videoUrl) {
+    if (!videoUrl) return '';
+    const cleanUrl = videoUrl.trim();
+
+    // Riconoscimento YouTube (watch?v=, youtu.be/, shorts/)
+    const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+    if (ytMatch && ytMatch[1]) {
+        return `
+            <div class="fe-video-Frame">
+                <iframe src="https://www.youtube.com/embed/${escapeHTML(ytMatch[1])}?rel=0" 
+                        title="Video Articolo" frameborder="0" 
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen></iframe>
+            </div>`;
+    }
+
+    // Riconoscimento Vimeo
+    const vimeoMatch = cleanUrl.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch && vimeoMatch[1]) {
+        return `
+            <div class="fe-video-Frame">
+                <iframe src="https://player.vimeo.com/video/${escapeHTML(vimeoMatch[1])}" 
+                        title="Video Articolo" frameborder="0" 
+                        allow="autoplay; fullscreen; picture-in-picture" 
+                        allowfullscreen></iframe>
+            </div>`;
+    }
+
+    // File video diretto (.mp4, .webm, .mov caricato su Supabase o link diretto)
+    return `
+        <div class="fe-video-Direct">
+            <video src="${escapeHTML(cleanUrl)}" controls playsinline preload="metadata" class="fe-native-video"></video>
+        </div>`;
 }
 
 // Compressione automatica immagini in WebP per risparmiare spazio gratuito su Supabase
@@ -125,10 +225,10 @@ async function compressImageFile(file, maxWidth = 1400, quality = 0.82) {
 async function uploadMediaToSupabase(file, folder = 'articles') {
     const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
     if (!allowedTypes.includes(file.type)) {
-        throw new Error('Formato non supportato. Usa immagini JPG, PNG o WebP.');
+        throw new Error('Formato immagine non supportato. Usa JPG, PNG, WebP o GIF.');
     }
-    if (file.size > 10 * 1024 * 1024) {
-        throw new Error('Immagine troppo grande (massimo 10 MB).');
+    if (file.size > 12 * 1024 * 1024) {
+        throw new Error('Immagine troppo grande (massimo 12 MB).');
     }
 
     const compressedBlob = await compressImageFile(file, folder === 'avatars' ? 400 : 1400);
@@ -144,6 +244,333 @@ async function uploadMediaToSupabase(file, folder = 'articles') {
     return data.publicUrl;
 }
 
+async function uploadVideoToSupabase(file) {
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime'];
+    if (!allowedVideoTypes.includes(file.type)) {
+        throw new Error('Formato video non supportato. Usa file MP4, WebM o MOV.');
+    }
+    // Limite prudenziale di 20 MB per non esaurire il piano gratuito di Supabase
+    if (file.size > 20 * 1024 * 1024) {
+        throw new Error('Il video supera i 20 MB. Per video lunghi/pesanti caricali su YouTube e incolla il link qui sotto!');
+    }
+
+    const ext = file.name.split('.').pop().toLowerCase() || 'mp4';
+    const fileName = `videos/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+    const { error } = await supabaseClient.storage
+        .from('media')
+        .upload(fileName, file, { contentType: file.type, upsert: false });
+
+    if (error) throw error;
+
+    const { data } = supabaseClient.storage.from('media').getPublicUrl(fileName);
+    return data.publicUrl;
+}
+
+// ============================================================================
+// INIEZIONE AUTOMATICA STILI E INTERFACCIA GALLERIA / CAROSELLO / VIDEO
+// ============================================================================
+
+function injectMultiMediaUIAndStyles() {
+    // 1. Inietta il CSS per Carosello (Opzione A), Galleria + Video (Opzione B) e Lightbox
+    if (!document.getElementById('fe-multimedia-styles')) {
+        const style = document.createElement('style');
+        style.id = 'fe-multimedia-styles';
+        style.textContent = `
+            /* Controlli Carosello Opzione A (Outfit) */
+            .fe-carousel-btn {
+                position: absolute;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 42px;
+                height: 42px;
+                border-radius: 50%;
+                background: rgba(29, 29, 31, 0.72);
+                backdrop-filter: blur(8px);
+                -webkit-backdrop-filter: blur(8px);
+                color: #fff;
+                border: 1px solid rgba(255,255,255,0.25);
+                font-size: 20px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                z-index: 25;
+                transition: all 0.2s ease;
+                user-select: none;
+            }
+            .fe-carousel-btn:hover {
+                background: rgba(29, 29, 31, 0.92);
+                transform: translateY(-50%) scale(1.06);
+            }
+            .fe-carousel-prev { left: 14px; }
+            .fe-carousel-next { right: 14px; }
+            .fe-carousel-counter {
+                position: absolute;
+                top: 14px;
+                right: 14px;
+                background: rgba(29, 29, 31, 0.75);
+                backdrop-filter: blur(6px);
+                color: #fff;
+                padding: 4px 11px;
+                border-radius: 20px;
+                font-size: 0.78rem;
+                font-weight: 600;
+                z-index: 24;
+            }
+            .fe-carousel-dots {
+                display: flex;
+                justify-content: center;
+                gap: 8px;
+                margin-top: 12px;
+            }
+            .fe-carousel-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background: #D2D2D7;
+                border: none;
+                padding: 0;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+            .fe-carousel-dot.active {
+                background: #1D1D1F;
+                width: 22px;
+                border-radius: 10px;
+            }
+            /* Video container dentro Carosello o Articolo */
+            .fe-video-Frame {
+                position: relative;
+                width: 100%;
+                padding-bottom: 56.25%;
+                background: #000;
+                border-radius: 16px;
+                overflow: hidden;
+            }
+            .fe-video-Frame iframe {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                border: 0;
+            }
+            .fe-video-Direct {
+                width: 100%;
+                background: #000;
+                border-radius: 16px;
+                overflow: hidden;
+                display: flex;
+                justify-content: center;
+            }
+            .fe-native-video {
+                width: 100%;
+                max-height: 640px;
+                display: block;
+            }
+            /* Sezione Opzione B: Galleria & Video sotto il testo per Novità, Trend, Consigli */
+            .fe-editorial-media-section {
+                margin: 32px 0;
+                padding-top: 24px;
+                border-top: 1px solid rgba(0,0,0,0.08);
+            }
+            .fe-editorial-media-title {
+                font-size: 1.15rem;
+                font-weight: 700;
+                margin-bottom: 16px;
+                color: #1D1D1F;
+            }
+            .fe-editorial-gallery-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+                gap: 14px;
+                margin-top: 16px;
+            }
+            .fe-editorial-gallery-item {
+                border-radius: 14px;
+                overflow: hidden;
+                aspect-ratio: 4 / 5;
+                background: #F5F5F7;
+                cursor: zoom-in;
+                border: 1px solid rgba(0,0,0,0.06);
+                transition: transform 0.2s ease, box-shadow 0.2s ease;
+            }
+            .fe-editorial-gallery-item:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 10px 24px rgba(0,0,0,0.08);
+            }
+            .fe-editorial-gallery-item img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                display: block;
+            }
+            /* Miniatura Admin Gallery */
+            .fe-admin-extra-box {
+                background: #F5F5F7;
+                border-radius: 14px;
+                padding: 16px;
+                margin-top: 14px;
+                border: 1px solid rgba(0,0,0,0.07);
+            }
+            .fe-admin-thumbs-grid {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+                margin-top: 12px;
+            }
+            .fe-admin-thumb-card {
+                position: relative;
+                width: 84px;
+                height: 84px;
+                border-radius: 10px;
+                overflow: hidden;
+                border: 1px solid rgba(0,0,0,0.12);
+                background: #fff;
+            }
+            .fe-admin-thumb-card img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .fe-admin-thumb-remove {
+                position: absolute;
+                top: 4px;
+                right: 4px;
+                width: 22px;
+                height: 22px;
+                border-radius: 50%;
+                background: rgba(215, 0, 21, 0.9);
+                color: #fff;
+                border: none;
+                font-size: 13px;
+                line-height: 1;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            /* Lightbox ingrandimento foto */
+            .fe-lightbox-backdrop {
+                position: fixed;
+                inset: 0;
+                background: rgba(0,0,0,0.88);
+                backdrop-filter: blur(8px);
+                z-index: 9999;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+                cursor: zoom-out;
+            }
+            .fe-lightbox-backdrop img {
+                max-width: 95vw;
+                max-height: 90vh;
+                border-radius: 12px;
+                object-fit: contain;
+                box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+
+    // 2. Assicura i contenitori per Carosello (Opzione A) e Galleria/Video (Opzione B) nella Vista Articolo
+    const imageStage = document.getElementById('article-image-stage');
+    if (imageStage && !document.getElementById('fe-carousel-video-holder')) {
+        imageStage.style.position = 'relative';
+
+        const videoHolder = document.createElement('div');
+        videoHolder.id = 'fe-carousel-video-holder';
+        videoHolder.className = 'hidden';
+        videoHolder.style.width = '100%';
+        imageStage.appendChild(videoHolder);
+
+        const prevBtn = document.createElement('button');
+        prevBtn.type = 'button';
+        prevBtn.id = 'fe-carousel-prev';
+        prevBtn.className = 'fe-carousel-btn fe-carousel-prev hidden';
+        prevBtn.setAttribute('aria-label', 'Slide precedente');
+        prevBtn.innerHTML = '&#10094;';
+        imageStage.appendChild(prevBtn);
+
+        const nextBtn = document.createElement('button');
+        nextBtn.type = 'button';
+        nextBtn.id = 'fe-carousel-next';
+        nextBtn.className = 'fe-carousel-btn fe-carousel-next hidden';
+        nextBtn.setAttribute('aria-label', 'Slide successiva');
+        nextBtn.innerHTML = '&#10095;';
+        imageStage.appendChild(nextBtn);
+
+        const counterBadge = document.createElement('div');
+        counterBadge.id = 'fe-carousel-counter';
+        counterBadge.className = 'fe-carousel-counter hidden';
+        imageStage.appendChild(counterBadge);
+
+        const dotsBar = document.createElement('div');
+        dotsBar.id = 'fe-carousel-dots';
+        dotsBar.className = 'fe-carousel-dots hidden';
+        imageStage.parentNode.insertBefore(dotsBar, imageStage.nextSibling);
+    }
+
+    const articleContentEl = document.getElementById('article-detail-content');
+    if (articleContentEl && !document.getElementById('fe-option-b-media-container')) {
+        const optionBContainer = document.createElement('div');
+        optionBContainer.id = 'fe-option-b-media-container';
+        optionBContainer.className = 'fe-editorial-media-section hidden';
+        articleContentEl.parentNode.insertBefore(optionBContainer, articleContentEl.nextSibling);
+    }
+
+    // 3. Assicura nel Pannello Admin i controlli per Foto Multiple e Video (se non già presenti nell'HTML)
+    const workspace = document.getElementById('admin-hotspot-workspace');
+    if (workspace && !document.getElementById('admin-extra-media-controls')) {
+        const extraBox = document.createElement('div');
+        extraBox.id = 'admin-extra-media-controls';
+        extraBox.className = 'fe-admin-extra-box';
+        extraBox.innerHTML = `
+            <h4 style="margin:0 0 6px 0; font-size:0.95rem;">📸 Foto Aggiuntive & 🎬 Video dell'Articolo (Opzionale)</h4>
+            <p class="field-help" style="margin-bottom:12px;">
+                • Se la categoria è <strong>Outfit (Opzione A)</strong>: le foto extra e il video verranno mostrati in un <strong>Carosello sfogliabile</strong> insieme alla foto principale.<br>
+                • Se la categoria è <strong>Novità, Trend o Consigli (Opzione B)</strong>: compariranno in una sezione <strong>Galleria & Video</strong> sotto il testo dell'articolo.
+            </p>
+
+            <!-- Caricamento Foto Multiple -->
+            <div class="form-group" style="margin-bottom:14px;">
+                <label style="font-weight:600; font-size:0.85rem;">Aggiungi altre foto (puoi selezionarne anche più di una insieme):</label>
+                <div class="upload-controls" style="margin-top:6px;">
+                    <input type="file" id="admin-extra-photos-file" accept="image/*" multiple class="input-file">
+                    <span class="or-divider">oppure incolla URL foto extra:</span>
+                    <div style="display:flex; gap:8px; width:100%;">
+                        <input type="url" id="admin-extra-photo-url-input" class="input-field" placeholder="https://...">
+                        <button type="button" id="btn-add-extra-photo-url" class="btn-secondary btn-sm" style="white-space:nowrap;">+ Aggiungi Foto</button>
+                    </div>
+                </div>
+                <div id="admin-extra-photos-list" class="fe-admin-thumbs-grid"></div>
+            </div>
+
+            <!-- Caricamento o Link Video -->
+            <div class="form-group" style="margin-bottom:0;">
+                <label style="font-weight:600; font-size:0.85rem;">Video dell'articolo (Link YouTube / Vimeo / MP4 oppure carica breve clip max 20 MB):</label>
+                <div class="upload-controls" style="margin-top:6px;">
+                    <input type="url" id="admin-video-url" class="input-field" placeholder="Incolla link YouTube, Shorts, Vimeo o .mp4 diretto...">
+                    <span class="or-divider">oppure carica file video (.mp4 / .mov):</span>
+                    <input type="file" id="admin-video-file" accept="video/mp4,video/webm,video/quicktime" class="input-file">
+                </div>
+                <div id="admin-video-preview-status" class="field-help" style="margin-top:6px; color:#1D1D1F; font-weight:500;"></div>
+            </div>
+        `;
+        workspace.parentNode.insertBefore(extraBox, workspace.nextSibling);
+    }
+}
+
+function openImageLightbox(srcUrl) {
+    const backdrop = document.createElement('div');
+    backdrop.className = 'fe-lightbox-backdrop';
+    backdrop.innerHTML = `<img src="${escapeHTML(srcUrl)}" alt="Ingrandimento">`;
+    backdrop.addEventListener('click', () => backdrop.remove());
+    document.body.appendChild(backdrop);
+}
+
 // ============================================================================
 // INIZIALIZZAZIONE E AUTENTICAZIONE
 // ============================================================================
@@ -157,7 +584,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         birthInput.max = maxDate.toISOString().split('T')[0];
     }
 
-    // 2. Collega immediatamente tutti i pulsanti dell'interfaccia (incluso "Accedi")
+    // 2. Inietta gli elementi grafici per Multi-Foto e Video e collega i pulsanti UI
+    injectMultiMediaUIAndStyles();
     bindUIEvents();
 
     // 3. Verifica configurazione chiavi
@@ -173,7 +601,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 4. Carica sessione iniziale e articoli con gestione errori garantita
+    // 4. Carica sessione iniziale con gestione errori garantita
     try {
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
         if (sessionError) {
@@ -186,7 +614,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 5. Listener per i cambi di stato successivi (login, logout, recupero password)
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'INITIAL_SESSION') return; // Già gestito al punto 4
+        if (event === 'INITIAL_SESSION') return;
         if (event === 'PASSWORD_RECOVERY') {
             openAuthModal('update-password');
         }
@@ -215,7 +643,6 @@ async function refreshUserSession(user) {
     }
 
     try {
-        // Carica profilo privato dal DB
         const { data: profile, error } = await supabaseClient
             .from('profiles')
             .select('*')
@@ -239,7 +666,6 @@ async function refreshUserSession(user) {
         state.currentProfile = profile;
         state.isAdmin = profile.role === 'admin';
 
-        // Aggiorna Header stile iSpazio (Nome + Foto Profilo)
         btnOpenAuth.classList.add('hidden');
         btnOpenProfile.classList.remove('hidden');
         document.getElementById('header-user-name').textContent = profile.first_name;
@@ -293,7 +719,6 @@ async function loadCatalogArticles() {
         console.error('Eccezione caricamento articoli:', err);
         state.articles = [];
     } finally {
-        // Garantisce che il caricamento termini SEMPRE, anche in caso di errore
         if (loadingEl) loadingEl.classList.add('hidden');
         renderCatalogGrid();
     }
@@ -327,16 +752,27 @@ function renderCatalogGrid() {
     gridEl.innerHTML = filtered.map((art) => {
         const likesCount = art.article_likes?.[0]?.count || 0;
         const commentsCount = art.comments?.[0]?.count || 0;
-        const hotspots = Array.isArray(art.hotspots) ? art.hotspots : [];
-        const hasHotspots = hotspots.length > 0;
+        const { pins, gallery, videoUrl } = parseArticleMedia(art);
+        const totalPhotos = 1 + gallery.length;
+
+        const badgesHTML = [];
+        if (pins.length > 0) {
+            badgesHTML.push(`● <span>${pins.length} ${pins.length === 1 ? 'capo cliccabile' : 'capi cliccabili'}</span>`);
+        }
+        if (totalPhotos > 1) {
+            badgesHTML.push(`📸 <span>${totalPhotos} foto</span>`);
+        }
+        if (videoUrl) {
+            badgesHTML.push(`🎬 <span>Video</span>`);
+        }
 
         return `
             <article class="article-card" data-article-id="${escapeHTML(art.id)}">
                 <div class="card-thumb-wrapper">
                     <img src="${escapeHTML(art.cover_image)}" alt="${escapeHTML(art.title)}" class="card-thumb" loading="lazy">
-                    ${hasHotspots ? `
-                        <div class="card-shop-badge" title="Contiene capi cliccabili">
-                            ● <span>${hotspots.length} capi cliccabili</span>
+                    ${badgesHTML.length > 0 ? `
+                        <div class="card-shop-badge" title="Contenuti multimediali e interattivi">
+                            ${badgesHTML.join(' &nbsp;•&nbsp; ')}
                         </div>
                     ` : ''}
                 </div>
@@ -360,7 +796,6 @@ function renderCatalogGrid() {
         `;
     }).join('');
 
-    // Rendiamo ogni card interamente cliccabile
     gridEl.querySelectorAll('.article-card').forEach((card) => {
         card.addEventListener('click', () => {
             const articleId = card.getAttribute('data-article-id');
@@ -370,7 +805,7 @@ function renderCatalogGrid() {
 }
 
 // ============================================================================
-// DETTAGLIO ARTICOLO, CERCHIETTI "SHOP THE LOOK" E LIKE UNIVOCO
+// DETTAGLIO ARTICOLO: OPZIONE A (OUTFIT CAROSELLO) vs OPZIONE B (GALLERIA SOTTO)
 // ============================================================================
 
 async function openArticleDetail(articleId) {
@@ -385,21 +820,213 @@ async function openArticleDetail(articleId) {
     document.getElementById('article-detail-date').textContent = formatDate(article.created_at);
     document.getElementById('article-detail-title').textContent = article.title;
     document.getElementById('article-detail-excerpt').textContent = article.excerpt;
-    document.getElementById('article-detail-image').src = article.cover_image;
-    document.getElementById('article-detail-image').alt = article.title;
     document.getElementById('article-detail-content').textContent = article.content;
 
-    // Mostra azioni rapide se Admin
     const adminQuick = document.getElementById('article-admin-actions');
     if (state.isAdmin) adminQuick.classList.remove('hidden');
     else adminQuick.classList.add('hidden');
 
-    // Disegna i cerchietti cliccabili sui vestiti (Hotspots)
-    renderArticleHotspots(article.hotspots || []);
+    // Estrae Cerchietti, Foto Extra e Video
+    const { pins, gallery, videoUrl } = parseArticleMedia(article);
 
-    // Carica stato Like univoco e Commenti
+    // Scelta automatica del layout in base alla categoria richiesta:
+    // - "Outfit" -> Opzione A (Carosello interattivo in alto)
+    // - "Novità", "Trend", "Consigli" -> Opzione B (Foto principale in alto + Galleria e Video sotto)
+    const isOutfitCategory = (article.category || '').trim().toLowerCase() === 'outfit';
+
+    if (isOutfitCategory) {
+        setupOptionACarousel(article, pins, gallery, videoUrl);
+    } else {
+        setupOptionBGalleryAndVideo(article, pins, gallery, videoUrl);
+    }
+
     await refreshArticleLikes(article.id);
     await loadArticleComments(article.id);
+}
+
+/**
+ * OPZIONE A (Categoria OUTFIT):
+ * Carosello stile Instagram nel riquadro principale con Foto 1 (dotata di cerchietti),
+ * seguita dalle Foto Extra e dall'eventuale Video.
+ */
+function setupOptionACarousel(article, pins, gallery, videoUrl) {
+    // Nasconde il contenitore Opzione B sotto il testo
+    const optionBContainer = document.getElementById('fe-option-b-media-container');
+    if (optionBContainer) {
+        optionBContainer.classList.add('hidden');
+        optionBContainer.innerHTML = '';
+    }
+
+    const slides = [
+        { type: 'image', url: article.cover_image, hasHotspots: true }
+    ];
+    gallery.forEach((imgUrl) => {
+        slides.push({ type: 'image', url: imgUrl, hasHotspots: false });
+    });
+    if (videoUrl) {
+        slides.push({ type: 'video', url: videoUrl, hasHotspots: false });
+    }
+
+    state.carouselSlides = slides;
+    state.carouselIndex = 0;
+
+    renderCurrentCarouselSlide(pins);
+}
+
+function renderCurrentCarouselSlide(pins) {
+    const slides = state.carouselSlides;
+    const idx = state.carouselIndex;
+    const current = slides[idx];
+
+    const mainImg = document.getElementById('article-detail-image');
+    const videoHolder = document.getElementById('fe-carousel-video-holder');
+    const hotspotsLayer = document.getElementById('article-hotspots-layer');
+    const hint = document.getElementById('hotspot-hint');
+    const prevBtn = document.getElementById('fe-carousel-prev');
+    const nextBtn = document.getElementById('fe-carousel-next');
+    const counterBadge = document.getElementById('fe-carousel-counter');
+    const dotsBar = document.getElementById('fe-carousel-dots');
+
+    if (!current) return;
+
+    if (current.type === 'video') {
+        mainImg.classList.add('hidden');
+        hotspotsLayer.classList.add('hidden');
+        hint.classList.add('hidden');
+        videoHolder.classList.remove('hidden');
+        videoHolder.innerHTML = buildVideoPlayerHTML(current.url);
+    } else {
+        videoHolder.classList.add('hidden');
+        videoHolder.innerHTML = '';
+        mainImg.classList.remove('hidden');
+        mainImg.src = current.url;
+        mainImg.alt = state.activeArticle?.title || 'Outfit';
+
+        if (current.hasHotspots) {
+            hotspotsLayer.classList.remove('hidden');
+            renderArticleHotspots(pins);
+        } else {
+            hotspotsLayer.classList.add('hidden');
+            hint.classList.add('hidden');
+        }
+    }
+
+    // Mostra o nasconde frecce e indicatori se c'è più di 1 slide
+    if (slides.length > 1) {
+        prevBtn.classList.remove('hidden');
+        nextBtn.classList.remove('hidden');
+        counterBadge.classList.remove('hidden');
+        dotsBar.classList.remove('hidden');
+
+        counterBadge.textContent = `${idx + 1} / ${slides.length}`;
+
+        dotsBar.innerHTML = slides.map((s, i) => `
+            <button type="button" class="fe-carousel-dot ${i === idx ? 'active' : ''}" 
+                    data-slide-idx="${i}" 
+                    title="${s.type === 'video' ? 'Video' : `Foto ${i + 1}`}"></button>
+        `).join('');
+
+        dotsBar.querySelectorAll('.fe-carousel-dot').forEach((dot) => {
+            dot.addEventListener('click', () => {
+                state.carouselIndex = Number(dot.getAttribute('data-slide-idx'));
+                renderCurrentCarouselSlide(pins);
+            });
+        });
+
+        prevBtn.onclick = (e) => {
+            e.stopPropagation();
+            state.carouselIndex = (state.carouselIndex - 1 + slides.length) % slides.length;
+            renderCurrentCarouselSlide(pins);
+        };
+
+        nextBtn.onclick = (e) => {
+            e.stopPropagation();
+            state.carouselIndex = (state.carouselIndex + 1) % slides.length;
+            renderCurrentCarouselSlide(pins);
+        };
+    } else {
+        prevBtn.classList.add('hidden');
+        nextBtn.classList.add('hidden');
+        counterBadge.classList.add('hidden');
+        dotsBar.classList.add('hidden');
+    }
+}
+
+/**
+ * OPZIONE B (Categorie NOVITÀ, TREND, CONSIGLI):
+ * Foto principale fissa in alto (con eventuali cerchietti) e sezione
+ * Galleria + Player Video dedicata subito sotto il corpo dell'articolo.
+ */
+function setupOptionBGalleryAndVideo(article, pins, gallery, videoUrl) {
+    // Ripristina lo stage principale alla sola Foto di Copertina
+    const mainImg = document.getElementById('article-detail-image');
+    const videoHolder = document.getElementById('fe-carousel-video-holder');
+    const hotspotsLayer = document.getElementById('article-hotspots-layer');
+    const prevBtn = document.getElementById('fe-carousel-prev');
+    const nextBtn = document.getElementById('fe-carousel-next');
+    const counterBadge = document.getElementById('fe-carousel-counter');
+    const dotsBar = document.getElementById('fe-carousel-dots');
+
+    if (videoHolder) {
+        videoHolder.classList.add('hidden');
+        videoHolder.innerHTML = '';
+    }
+    if (prevBtn) prevBtn.classList.add('hidden');
+    if (nextBtn) nextBtn.classList.add('hidden');
+    if (counterBadge) counterBadge.classList.add('hidden');
+    if (dotsBar) dotsBar.classList.add('hidden');
+
+    mainImg.classList.remove('hidden');
+    mainImg.src = article.cover_image;
+    mainImg.alt = article.title;
+    hotspotsLayer.classList.remove('hidden');
+    renderArticleHotspots(pins);
+
+    // Costruisce la sezione Galleria & Video sotto il testo dell'articolo
+    const optionBContainer = document.getElementById('fe-option-b-media-container');
+    if (!optionBContainer) return;
+
+    if (gallery.length === 0 && !videoUrl) {
+        optionBContainer.classList.add('hidden');
+        optionBContainer.innerHTML = '';
+        return;
+    }
+
+    optionBContainer.classList.remove('hidden');
+
+    let html = '';
+
+    if (videoUrl) {
+        html += `
+            <div style="margin-bottom:${gallery.length > 0 ? '28px' : '0'};">
+                <h3 class="fe-editorial-media-title">🎬 Video Approfondimento</h3>
+                ${buildVideoPlayerHTML(videoUrl)}
+            </div>
+        `;
+    }
+
+    if (gallery.length > 0) {
+        html += `
+            <div>
+                <h3 class="fe-editorial-media-title">📸 Galleria Fotografica (${gallery.length} ${gallery.length === 1 ? 'foto' : 'foto'})</h3>
+                <div class="fe-editorial-gallery-grid">
+                    ${gallery.map((imgUrl, idx) => `
+                        <div class="fe-editorial-gallery-item" data-zoom-url="${escapeHTML(imgUrl)}" title="Clicca per ingrandire">
+                            <img src="${escapeHTML(imgUrl)}" alt="${escapeHTML(article.title)} - Foto ${idx + 2}" loading="lazy">
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+    }
+
+    optionBContainer.innerHTML = html;
+
+    optionBContainer.querySelectorAll('[data-zoom-url]').forEach((item) => {
+        item.addEventListener('click', () => {
+            openImageLightbox(item.getAttribute('data-zoom-url'));
+        });
+    });
 }
 
 function renderArticleHotspots(hotspots) {
@@ -421,7 +1048,6 @@ function renderArticleHotspots(hotspots) {
         pin.style.top = `${Number(spot.y).toFixed(2)}%`;
         pin.title = `${spot.label} — Clicca per aprire il sito ufficiale`;
 
-        // Cartellino con nome capo e apertura diretta del sito ufficiale
         const card = document.createElement('a');
         card.className = 'hotspot-card hidden';
         card.href = spot.url;
@@ -432,7 +1058,6 @@ function renderArticleHotspots(hotspots) {
             <span class="hotspot-card-cta">Vai al sito ↗</span>
         `;
 
-        // Su Desktop/iPhone: il primo tap mostra o apre direttamente il negozio
         pin.addEventListener('click', (e) => {
             e.stopPropagation();
             const isHidden = card.classList.contains('hidden');
@@ -448,7 +1073,6 @@ function renderArticleHotspots(hotspots) {
         layer.appendChild(pin);
     });
 
-    // Chiudi i cartellini cliccando fuori sulla foto
     document.getElementById('article-image-stage').onclick = () => {
         layer.querySelectorAll('.hotspot-card').forEach((c) => c.classList.add('hidden'));
     };
@@ -608,7 +1232,6 @@ async function loadArticleComments(articleId) {
         `;
     }).join('');
 
-    // Eventi sui pulsanti di ogni commento
     listEl.querySelectorAll('[data-action]').forEach((btn) => {
         btn.addEventListener('click', async () => {
             const action = btn.getAttribute('data-action');
@@ -698,7 +1321,7 @@ async function handleDeleteComment(commentId) {
 }
 
 // ============================================================================
-// PANNELLO AMMINISTRATIVO & CREATORE VISUALE CERCHIETTI VESTITI
+// PANNELLO AMMINISTRATIVO: CERCHIETTI, FOTO MULTIPLE E VIDEO
 // ============================================================================
 
 function renderEditorHotspotsPreview() {
@@ -711,15 +1334,13 @@ function renderEditorHotspotsPreview() {
     countSpan.textContent = state.editorHotspots.length;
 
     state.editorHotspots.forEach((spot, index) => {
-        // Disegna il cerchietto sull'anteprima
         const pin = document.createElement('div');
         pin.className = 'hotspot-pin';
-        pin.style.left = `${spot.x.toFixed(2)}%`;
-        pin.style.top = `${spot.y.toFixed(2)}%`;
+        pin.style.left = `${Number(spot.x).toFixed(2)}%`;
+        pin.style.top = `${Number(spot.y).toFixed(2)}%`;
         pin.title = spot.label;
         layer.appendChild(pin);
 
-        // Aggiunge riga nella lista sotto la foto per poterlo rimuovere
         const row = document.createElement('div');
         row.className = 'admin-hotspot-row';
         row.innerHTML = `
@@ -737,6 +1358,43 @@ function renderEditorHotspotsPreview() {
     });
 }
 
+function renderEditorExtraMediaPreview() {
+    const listEl = document.getElementById('admin-extra-photos-list');
+    const videoInput = document.getElementById('admin-video-url');
+    const videoStatus = document.getElementById('admin-video-preview-status');
+
+    if (listEl) {
+        if (state.editorGallery.length === 0) {
+            listEl.innerHTML = `<span class="field-help">Nessuna foto extra aggiunta.</span>`;
+        } else {
+            listEl.innerHTML = state.editorGallery.map((url, idx) => `
+                <div class="fe-admin-thumb-card" title="Foto extra ${idx + 2}">
+                    <img src="${escapeHTML(url)}" alt="Extra ${idx + 2}">
+                    <button type="button" class="fe-admin-thumb-remove" data-remove-extra-photo="${idx}" title="Rimuovi foto">&times;</button>
+                </div>
+            `).join('');
+
+            listEl.querySelectorAll('[data-remove-extra-photo]').forEach((btn) => {
+                btn.addEventListener('click', () => {
+                    const i = Number(btn.getAttribute('data-remove-extra-photo'));
+                    state.editorGallery.splice(i, 1);
+                    renderEditorExtraMediaPreview();
+                });
+            });
+        }
+    }
+
+    if (videoInput && videoInput.value.trim() !== state.editorVideoUrl) {
+        videoInput.value = state.editorVideoUrl || '';
+    }
+
+    if (videoStatus) {
+        videoStatus.textContent = state.editorVideoUrl
+            ? `✅ Video collegato: ${state.editorVideoUrl}`
+            : '';
+    }
+}
+
 async function loadAdminAllArticles() {
     const container = document.getElementById('admin-articles-table');
     const { data, error } = await supabaseClient
@@ -751,22 +1409,25 @@ async function loadAdminAllArticles() {
         return;
     }
 
-    container.innerHTML = data.map((art) => `
-        <div class="admin-list-row">
-            <div>
-                <strong>${escapeHTML(art.title)}</strong>
-                <div style="font-size:0.78rem; color:var(--text-secondary);">
-                    ${escapeHTML(art.category)} • ${formatDate(art.created_at)} •
-                    ${art.published ? '🟢 Pubblicato' : '🟠 Bozza'} •
-                    ${(art.hotspots || []).length} cerchietti
+    container.innerHTML = data.map((art) => {
+        const { pins, gallery, videoUrl } = parseArticleMedia(art);
+        return `
+            <div class="admin-list-row">
+                <div>
+                    <strong>${escapeHTML(art.title)}</strong>
+                    <div style="font-size:0.78rem; color:var(--text-secondary);">
+                        ${escapeHTML(art.category)} • ${formatDate(art.created_at)} •
+                        ${art.published ? '🟢 Pubblicato' : '🟠 Bozza'} •
+                        ${pins.length} cerchietti • ${1 + gallery.length} foto ${videoUrl ? '• 🎬 Video' : ''}
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px;">
+                    <button class="btn-secondary btn-sm" data-edit-art="${escapeHTML(art.id)}">Modifica</button>
+                    <button class="btn-danger btn-sm" data-del-art="${escapeHTML(art.id)}">Elimina</button>
                 </div>
             </div>
-            <div style="display:flex; gap:8px;">
-                <button class="btn-secondary btn-sm" data-edit-art="${escapeHTML(art.id)}">Modifica</button>
-                <button class="btn-danger btn-sm" data-del-art="${escapeHTML(art.id)}">Elimina</button>
-            </div>
-        </div>
-    `).join('');
+        `;
+    }).join('');
 
     container.querySelectorAll('[data-edit-art]').forEach((btn) => {
         btn.addEventListener('click', () => {
@@ -805,8 +1466,13 @@ function populateAdminEditorForEdit(article) {
     previewImg.src = article.cover_image;
     document.getElementById('admin-hotspot-workspace').classList.remove('hidden');
 
-    state.editorHotspots = Array.isArray(article.hotspots) ? [...article.hotspots] : [];
+    const { pins, gallery, videoUrl } = parseArticleMedia(article);
+    state.editorHotspots = [...pins];
+    state.editorGallery = [...gallery];
+    state.editorVideoUrl = videoUrl || '';
+
     renderEditorHotspotsPreview();
+    renderEditorExtraMediaPreview();
 }
 
 async function refreshAdminReportBadge() {
@@ -882,7 +1548,6 @@ async function loadAdminModerationData() {
         });
     }
 
-    // Ultimi commenti globali
     const { data: allComments } = await supabaseClient
         .from('comments')
         .select('id, content, created_at, public_profiles(first_name)')
@@ -984,7 +1649,6 @@ function openAuthModal(mode = 'login') {
 }
 
 function bindUIEvents() {
-    // Navigazione Logo e Categorie
     document.getElementById('logo-link').addEventListener('click', (e) => {
         e.preventDefault();
         switchMainView('view-home');
@@ -1015,7 +1679,6 @@ function bindUIEvents() {
         renderCatalogGrid();
     });
 
-    // Navigazione Articolo
     document.getElementById('btn-back-home').addEventListener('click', () => switchMainView('view-home'));
     document.getElementById('btn-like-article').addEventListener('click', toggleArticleLike);
 
@@ -1029,7 +1692,6 @@ function bindUIEvents() {
         }
     });
 
-    // Azioni rapide Admin sull'articolo corrente
     document.getElementById('btn-edit-current-article').addEventListener('click', () => {
         if (!state.activeArticle) return;
         switchMainView('view-admin');
@@ -1044,7 +1706,6 @@ function bindUIEvents() {
         switchMainView('view-home');
     });
 
-    // Invio Nuovo Commento
     document.getElementById('form-new-comment').addEventListener('submit', async (e) => {
         e.preventDefault();
         if (!state.currentUser || !state.activeArticle) return;
@@ -1083,7 +1744,6 @@ function bindUIEvents() {
     document.getElementById('btn-goto-reset').addEventListener('click', () => openAuthModal('reset'));
     document.getElementById('btn-back-to-login').addEventListener('click', () => openAuthModal('login'));
 
-    // Login Submit
     document.getElementById('form-login').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim();
@@ -1098,7 +1758,6 @@ function bindUIEvents() {
         showToast('Bentornato su Fuori Etichetta!');
     });
 
-    // Registrazione con Controllo Obbligatorio >= 16 Anni + Verifica Email
     document.getElementById('form-register').addEventListener('submit', async (e) => {
         e.preventDefault();
         const firstName = document.getElementById('reg-firstname').value.trim();
@@ -1136,7 +1795,6 @@ function bindUIEvents() {
         showToast('Registrazione completata! Controlla la tua email per cliccare il link di verifica.');
     });
 
-    // Recupero Password via Email
     document.getElementById('form-reset-request').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('reset-email').value.trim();
@@ -1149,7 +1807,6 @@ function bindUIEvents() {
         showToast('Ti abbiamo inviato un\'email con il link per reimpostare la password.');
     });
 
-    // Salvataggio Nuova Password
     document.getElementById('form-update-password').addEventListener('submit', async (e) => {
         e.preventDefault();
         const newPassword = document.getElementById('new-reset-password').value;
@@ -1162,7 +1819,7 @@ function bindUIEvents() {
         showToast('Password aggiornata con successo!');
     });
 
-    // Modale Profilo Stile iSpazio (Solo Nome + Foto Profilo)
+    // Modale Profilo
     document.getElementById('btn-open-profile').addEventListener('click', () => {
         if (!state.currentProfile) return;
         document.getElementById('profile-firstname').value = state.currentProfile.first_name;
@@ -1218,7 +1875,7 @@ function bindUIEvents() {
     });
 
     // ========================================================================
-    // EVENTI PANNELLO ADMIN & POSIZIONAMENTO CERCHIETTI SULLA FOTO
+    // EVENTI PANNELLO ADMIN: FOTO PRINCIPALE, FOTO EXTRA, VIDEO E CERCHIETTI
     // ========================================================================
     document.getElementById('btn-open-admin').addEventListener('click', async () => {
         if (!state.isAdmin) return;
@@ -1239,23 +1896,22 @@ function bindUIEvents() {
         });
     });
 
-    // Caricamento foto articolo da file (con compressione WebP automatica)
+    // Foto principale di copertina
     document.getElementById('admin-image-file').addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
         try {
-            showToast('Ottimizzazione e caricamento foto outfit in corso...');
+            showToast('Ottimizzazione e caricamento foto principale...');
             const url = await uploadMediaToSupabase(file, 'articles');
             document.getElementById('admin-image-url').value = url;
             document.getElementById('admin-preview-img').src = url;
             document.getElementById('admin-hotspot-workspace').classList.remove('hidden');
-            showToast('Foto pronta! Ora clicca sui vestiti nella foto per aggiungere i cerchietti.');
+            showToast('Foto principale pronta! Clicca sui vestiti per aggiungere i cerchietti.');
         } catch (err) {
             showToast(err.message || 'Errore caricamento immagine.');
         }
     });
 
-    // Inserimento URL immagine manuale
     document.getElementById('admin-image-url').addEventListener('input', (e) => {
         const url = e.target.value.trim();
         if (url.startsWith('http')) {
@@ -1263,6 +1919,74 @@ function bindUIEvents() {
             document.getElementById('admin-hotspot-workspace').classList.remove('hidden');
         }
     });
+
+    // Caricamento FOTO EXTRA (selezione multipla da iPhone/PC)
+    const extraPhotosFileInput = document.getElementById('admin-extra-photos-file');
+    if (extraPhotosFileInput) {
+        extraPhotosFileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files || []);
+            if (files.length === 0) return;
+
+            showToast(`Caricamento di ${files.length} foto in corso...`);
+            for (const file of files) {
+                try {
+                    const url = await uploadMediaToSupabase(file, 'articles');
+                    state.editorGallery.push(url);
+                    renderEditorExtraMediaPreview();
+                } catch (err) {
+                    showToast(err.message || `Errore su ${file.name}`);
+                }
+            }
+            extraPhotosFileInput.value = '';
+            showToast('Foto aggiuntive caricate!');
+        });
+    }
+
+    // Aggiunta FOTO EXTRA tramite link URL
+    const btnAddExtraUrl = document.getElementById('btn-add-extra-photo-url');
+    if (btnAddExtraUrl) {
+        btnAddExtraUrl.addEventListener('click', () => {
+            const input = document.getElementById('admin-extra-photo-url-input');
+            const url = input ? input.value.trim() : '';
+            if (!url.startsWith('http')) {
+                showToast('Inserisci un URL immagine valido che inizi con https://');
+                return;
+            }
+            state.editorGallery.push(url);
+            input.value = '';
+            renderEditorExtraMediaPreview();
+            showToast('Foto extra aggiunta alla galleria!');
+        });
+    }
+
+    // Inserimento VIDEO tramite link (YouTube, Vimeo, MP4)
+    const videoUrlInput = document.getElementById('admin-video-url');
+    if (videoUrlInput) {
+        videoUrlInput.addEventListener('input', (e) => {
+            state.editorVideoUrl = e.target.value.trim();
+            renderEditorExtraMediaPreview();
+        });
+    }
+
+    // Caricamento VIDEO diretto da file (clip max 20 MB)
+    const videoFileInput = document.getElementById('admin-video-file');
+    if (videoFileInput) {
+        videoFileInput.addEventListener('change', async (e) => {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            try {
+                showToast('Caricamento video su Supabase in corso...');
+                const url = await uploadVideoToSupabase(file);
+                state.editorVideoUrl = url;
+                renderEditorExtraMediaPreview();
+                showToast('Video caricato con successo!');
+            } catch (err) {
+                showToast(err.message || 'Errore durante il caricamento del video.');
+            } finally {
+                videoFileInput.value = '';
+            }
+        });
+    }
 
     // Clic sulla foto nell'Editor Admin per piazzare il cerchietto sul vestito
     document.getElementById('admin-image-preview-box').addEventListener('click', (e) => {
@@ -1305,8 +2029,11 @@ function bindUIEvents() {
         document.getElementById('form-admin-article').reset();
         document.getElementById('admin-article-id').value = '';
         state.editorHotspots = [];
+        state.editorGallery = [];
+        state.editorVideoUrl = '';
         document.getElementById('admin-hotspot-workspace').classList.add('hidden');
         renderEditorHotspotsPreview();
+        renderEditorExtraMediaPreview();
     });
 
     // Salvataggio / Pubblicazione Articolo (Create / Update)
@@ -1323,9 +2050,16 @@ function bindUIEvents() {
         const published = document.getElementById('admin-article-published').checked;
 
         if (!coverImage) {
-            showToast('Carica una foto o inserisci l\'URL dell\'immagine di copertina.');
+            showToast('Carica una foto principale o inserisci l\'URL dell\'immagine di copertina.');
             return;
         }
+
+        // Unisce Cerchietti + Foto Extra + Video nel campo JSON `hotspots`
+        const combinedMediaPayload = packArticleMedia(
+            state.editorHotspots,
+            state.editorGallery,
+            state.editorVideoUrl
+        );
 
         const payload = {
             title,
@@ -1333,7 +2067,7 @@ function bindUIEvents() {
             excerpt,
             cover_image: coverImage,
             content,
-            hotspots: state.editorHotspots,
+            hotspots: combinedMediaPayload,
             published,
             author_id: state.currentUser.id,
             updated_at: new Date().toISOString()
