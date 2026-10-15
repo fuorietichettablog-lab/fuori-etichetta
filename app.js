@@ -1085,20 +1085,19 @@ function bindUIEvents() {
             return;
         }
 
-        const { error } = await supabaseClient.auth.signUp({
-            email,
-            password,
-            options: {
-                emailRedirectTo: 'https://fuorietichettablog-lab.github.io/fuori-etichetta',
-                data: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    phone: phone,
-                    birth_date: birthDate,
-                    avatar_url: ''
-                }
+       const { error } = await supabaseClient.auth.signUp({
+        email,
+        password,
+        options: {
+            data: {
+                first_name: firstName,
+                last_name: lastName,
+                phone: phone,
+                birth_date: birthDate,
+                avatar_url: ''
             }
-        });
+        }
+    });
 
         if (error) {
             showToast(`Errore registrazione: ${error.message}`);
@@ -1109,13 +1108,19 @@ function bindUIEvents() {
         showToast('Registrazione completata! Controlla la tua email per cliccare il link di verifica.');
     });
 
-    // Recupero Password via Email
+// Recupero Password via Email
     document.getElementById('form-reset-request').addEventListener('submit', async (e) => {
         e.preventDefault();
         const email = document.getElementById('reset-email').value.trim();
-        const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
-            redirectTo: window.location.origin
-        });
+        const { error } = await supabaseClient.auth.resetPasswordForEmail(email);
+        
+        if (error) {
+            showToast(`Errore: ${error.message}`);
+            return;
+        }
+        document.getElementById('modal-auth').classList.add('hidden');
+        showToast('Ti abbiamo inviato un\'email con il link per reimpostare la password.');
+    });
         if (error) {
             showToast(`Errore: ${error.message}`);
             return;
