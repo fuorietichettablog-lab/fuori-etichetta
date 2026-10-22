@@ -295,7 +295,8 @@ document.addEventListener("DOMContentLoaded", () => {
             const chars = text.length;
             const words = text ? text.split(/\s+/).length : 0;
             const mins = Math.max(1, Math.ceil(words / 200));
-            charCounter.textContent = `${words} parole · ${chars} car.`; readTime.textContent = `~${mins} min lettura`;
+            charCounter.textContent = `${words} parole · ${chars} car.`;
+            readTime.textContent = `~${mins} min lettura`;
         };
         contentInput.addEventListener("input", updateMetrics);
         updateMetrics();
@@ -755,4 +756,40 @@ document.addEventListener("DOMContentLoaded", () => {
                 margin: 0;
                 font-size: 0.78rem;
                 line-height: 1.4;
-  
+                color: #475569;
+            }
+
+            /* Mobile & iPhone Optimization */
+            @media (max-width: 960px) {
+                .fe-studio-grid {
+                    grid-template-columns: 1fr;
+                }
+                .fe-studio-sidebar {
+                    position: static;
+                }
+                .fe-studio-paper {
+                    padding: 24px 20px;
+                }
+                #admin-article-title {
+                    font-size: 1.65rem !important;
+                }
+                #view-admin .admin-top-bar {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 14px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    };
+
+    if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", () => {
+            injectStudioStyles();
+            setupStudio();
+        });
+    } else {
+        injectStudioStyles();
+        setupStudio();
+    }
+})();
