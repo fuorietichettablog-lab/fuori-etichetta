@@ -211,6 +211,61 @@
             #article-detail-content em {
                 font-style: italic;
             }
+
+            /* Tempo di lettura mostrato al lettore */
+            .fe-public-reading-time {
+                display: inline-flex;
+                align-items: center;
+                gap: 7px;
+                margin: 4px 0 28px;
+                padding: 7px 12px;
+                background: #f4f4f5;
+                color: #52525b;
+                border: 1px solid #e4e4e7;
+                border-radius: 999px;
+                font-size: 0.78rem;
+                font-weight: 700;
+                line-height: 1;
+            }
+
+            /* Foto extra distribuite nel corpo dell'articolo */
+            .fe-inline-extra-photo {
+                display: block;
+                width: 100%;
+                max-width: 900px;
+                margin: 46px auto;
+                padding: 0;
+                text-align: center;
+            }
+
+            .fe-inline-extra-photo img {
+                display: block;
+                width: 100%;
+                max-width: 100%;
+                max-height: 900px;
+                height: auto;
+                margin: 0 auto;
+                object-fit: contain;
+                border-radius: 16px;
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
+                cursor: zoom-in;
+            }
+
+            @media (max-width: 600px) {
+                .fe-public-reading-time {
+                    margin-bottom: 20px;
+                    font-size: 0.73rem;
+                }
+
+                .fe-inline-extra-photo {
+                    margin-top: 32px;
+                    margin-bottom: 32px;
+                }
+
+                .fe-inline-extra-photo img {
+                    border-radius: 12px;
+                }
+            }
         `;
 
         document.head.appendChild(style);
