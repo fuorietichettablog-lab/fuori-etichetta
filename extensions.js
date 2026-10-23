@@ -7,7 +7,7 @@
     "use strict";
 
     /* ==========================================================================
-       1. FORMATTAZIONE MARKDOWN SEMPLICE
+       1. FORMATTAZIONE MARKDOWN, TEMPO DI LETTURA & FOTO INLINE ARTICOLI
        ========================================================================== */
 
     function escapeHtml(text) {
@@ -73,9 +73,143 @@
         return htmlBlocks.join("");
     }
 
+    function updatePublicReadingTime() {
+        var articleContainer = document.getElementById("article-detail-content");
+        if (!articleContainer) return;
+
+        var rawText = (articleContainer.textContent || "").trim();
+        if (!rawText) return;
+
+        var words = rawText.split(/\s+/).filter(Boolean).length;
+        var minutes = Math.max(1, Math.ceil(words / 200));
+
+        var badge = document.getElementById("fe-public-reading-time");
+
+        if (!badge) {
+            badge = document.createElement("div");
+            badge.id = "fe-public-reading-time";
+            badge.className = "fe-public-reading-time";
+
+            var header = document.querySelector("#view-article .article-header");
+            if (header) {
+                header.appendChild(badge);
+            } else if (articleContainer.parentElement) {
+                articleContainer.parentElement.insertBefore(badge, articleContainer);
+            }
+        }
+
+        badge.textContent = "⏱ Tempo di lettura: ~" + minutes + " min";
+    }
+
+    function distributeInlineExtraPhotos() {
+        var articleContainer = document.getElementById("article-detail-content");
+        var mediaContainer = document.getElementById("fe-option-b-media-container");
+
+        if (!articleContainer || !mediaContainer) return;
+
+        // Se le foto sono già state distribuite per questo articolo, esce
+        if (articleContainer.querySelector(".fe-inline-extra-photo")) return;
+
+        var extraImages = mediaContainer.querySelectorAll("img");
+        if (!extraImages || extraImages.length === 0) return;
+
+        var blocks = articleContainer.querySelectorAll(
+            ".fe-article-paragraph, .fe-article-h2, .fe-article-h3, p"
+        );
+
+        var imgList = Array.prototype.slice.call(extraImages);
+        var totalImgs = imgList.length;
+
+        // Se il testo è stato scritto tutto in un unico blocco senza doppi a capo,
+        // lo divide automaticamente in paragrafi così da poter intercalare le foto
+        if (blocks.length <= 1) {
+            var singleHtml = articleContainer.innerHTML;
+            var parts = singleHtml.split(/(?:<br\s*\/?>|\.\s+)/i).filter(function (s) {
+                return s && s.trim().length > 0;
+            });
+
+            if (parts.length > 1) {
+                var rebuilt = [];
+                var chunkSize = Math.max(1, Math.ceil(parts.length / (totalImgs + 1)));
+
+                for (var c = 0; c < parts.length; c += chunkSize) {
+                    var slice = parts.slice(c, c + chunkSize).join(". ").trim();
+                    if (slice) {
+                        if (!/[.!?]$/.test(slice)) slice += ".";
+                        rebuilt.push('<p class="fe-article-paragraph">' + slice + "</p>");
+                    }
+                }
+
+                if (rebuilt.length > 1) {
+                    articleContainer.innerHTML = rebuilt.join("");
+                    blocks = articleContainer.querySelectorAll(".fe-article-paragraph");
+                }
+            }
+        }
+
+        var totalBlocks = blocks.length;
+        var step = Math.max(1, Math.floor(totalBlocks / (totalImgs + 1)));
+
+        for (var i = 0; i < totalImgs; i++) {
+            var originalImg = imgList[i];
+            var src = originalImg.getAttribute("src");
+            if (!src) continue;
+
+            var figure = document.createElement("figure");
+            figure.className = "fe-inline-extra-photo";
+
+            var newImg = document.createElement("img");
+            newImg.src = src;
+            newImg.alt = originalImg.getAttribute("alt") || "Foto articolo";
+            newImg.loading = "lazy";
+
+            // Mantiene il click per lo zoom se l'immagine originale era cliccabile
+            newImg.addEventListener("click", function (imgRef) {
+                return function () {
+                    imgRef.click();
+                };
+            }(originalImg));
+
+            figure.appendChild(newImg);
+
+            var targetIndex = ((i + 1) * step) - 1;
+            if (targetIndex >= totalBlocks) {
+                targetIndex = totalBlocks - 1;
+            }
+
+            var targetBlock = blocks[targetIndex];
+            if (targetBlock && targetBlock.parentNode === articleContainer) {
+                targetBlock.insertAdjacentElement("afterend", figure);
+            } else {
+                articleContainer.appendChild(figure);
+            }
+
+            // Nasconde la foto dal fondo pagina per non mostrarla doppia
+            var itemWrapper = originalImg.parentElement;
+            if (
+                itemWrapper &&
+                itemWrapper !== mediaContainer &&
+                itemWrapper.querySelectorAll("video, iframe").length === 0
+            ) {
+                itemWrapper.style.display = "none";
+            } else {
+                originalImg.style.display = "none";
+            }
+        }
+
+        // Se nel contenitore in fondo non ci sono video, nasconde il blocco vuoto
+        var hasVideo = mediaContainer.querySelector("video, iframe");
+        if (!hasVideo) {
+            mediaContainer.style.display = "none";
+        }
+    }
+
     function initMarkdownObserver() {
         var articleContainer = document.getElementById(
             "article-detail-content"
+        );
+        var mediaContainer = document.getElementById(
+            "fe-option-b-media-container"
         );
 
         if (!articleContainer) return;
@@ -94,10 +228,17 @@
 
                 if (rawText && rawText.trim() !== "") {
                     processing = true;
+                    if (mediaContainer) {
+                        mediaContainer.style.display = "";
+                    }
                     articleContainer.innerHTML = formatMarkdown(rawText);
                     processing = false;
                 }
             }
+
+            updatePublicReadingTime();
+            setTimeout(distributeInlineExtraPhotos, 60);
+            setTimeout(distributeInlineExtraPhotos, 250);
         }
 
         applyFormatting();
@@ -109,6 +250,18 @@
         observer.observe(articleContainer, {
             childList: true
         });
+
+        if (mediaContainer) {
+            var mediaObserver = new MutationObserver(function () {
+                setTimeout(distributeInlineExtraPhotos, 50);
+            });
+
+            mediaObserver.observe(mediaContainer, {
+                childList: true,
+                subtree: true,
+                attributes: true
+            });
+        }
     }
 
 
