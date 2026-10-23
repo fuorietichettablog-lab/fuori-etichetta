@@ -1,14 +1,16 @@
 /* ==========================================================================
    FUORI ETICHETTA - EXTENSIONS & STUDIO ADMIN PRO
-   Versione migliorata: layout editoriale, responsive, compatibile con app.js
+   Versione migliorata: layout editoriale iSpazio, responsive, compatibile con app.js
    ========================================================================== */
 
 (function () {
     "use strict";
 
     /* ==========================================================================
-       1. FORMATTAZIONE MARKDOWN, TEMPO DI LETTURA & FOTO INLINE ARTICOLI
+       1. MOTORE ARTICOLI STILE iSPAZIO (TEMPO DI LETTURA + FOTO IN MEZZO AL TESTO)
        ========================================================================== */
+
+    var lastProcessedSignature = "";
 
     function escapeHtml(text) {
         if (!text) return "";
@@ -73,195 +75,335 @@
         return htmlBlocks.join("");
     }
 
-    function updatePublicReadingTime() {
-        var articleContainer = document.getElementById("article-detail-content");
+    // Calcola e mostra SEMPRE il tempo di lettura per l'utente
+    function renderPublicReadingTime(articleContainer) {
         if (!articleContainer) return;
 
         var rawText = (articleContainer.textContent || "").trim();
         if (!rawText) return;
 
         var words = rawText.split(/\s+/).filter(Boolean).length;
-        var minutes = Math.max(1, Math.ceil(words / 200));
+        var minutes = Math.max(1, Math.ceil(words / 180));
+        var labelText = "⏱ Lettura: ~" + minutes + " min";
 
-        var badge = document.getElementById("fe-public-reading-time");
+        // 1. Lo inserisce nella riga meta in alto (accanto a Categoria e Data)
+        var metaTop = document.querySelector("#view-article .article-meta-top");
+        if (metaTop) {
+            var oldDot = document.getElementById("fe-meta-rt-dot");
+            var oldMeta = document.getElementById("fe-meta-rt-val");
+            if (!oldDot) {
+                oldDot = document.createElement("span");
+                oldDot.id = "fe-meta-rt-dot";
+                oldDot.className = "meta-dot";
+                oldDot.textContent = "•";
+                metaTop.appendChild(oldDot);
+            }
+            if (!oldMeta) {
+                oldMeta = document.createElement("span");
+                oldMeta.id = "fe-meta-rt-val";
+                oldMeta.style.fontWeight = "700";
+                oldMeta.style.color = "#18181b";
+                metaTop.appendChild(oldMeta);
+            }
+            oldMeta.textContent = labelText;
+        }
 
-        if (!badge) {
-            badge = document.createElement("div");
-            badge.id = "fe-public-reading-time";
-            badge.className = "fe-public-reading-time";
-
-            var header = document.querySelector("#view-article .article-header");
-            if (header) {
+        // 2. Lo inserisce anche come Pillola evidente sotto il titolo (stile iSpazio)
+        var header = document.querySelector("#view-article .article-header");
+        if (header) {
+            var badge = document.getElementById("fe-public-reading-time");
+            if (!badge) {
+                badge = document.createElement("div");
+                badge.id = "fe-public-reading-time";
+                badge.className = "fe-public-reading-time";
                 header.appendChild(badge);
-            } else if (articleContainer.parentElement) {
-                articleContainer.parentElement.insertBefore(badge, articleContainer);
+            }
+            badge.textContent = "⏱ Tempo di lettura stimato: " + minutes + " min (" + words + " parole)";
+        }
+    }
+
+    // Raccoglie gli URL delle foto extra da QUALSIASI posto in cui app.js le abbia messe
+    function collectExtraPhotoUrls() {
+        var urls = [];
+        var mainImg = document.getElementById("article-detail-image");
+        var mainSrc = mainImg ? (mainImg.getAttribute("src") || "").trim() : "";
+
+        function addUrl(u) {
+            if (!u || typeof u !== "string") return;
+            var clean = u.trim();
+            if (!clean || clean === mainSrc) return;
+            if (clean.indexOf("avatar") !== -1) return;
+            if (urls.indexOf(clean) === -1) {
+                urls.push(clean);
             }
         }
 
-        badge.textContent = "⏱ Tempo di lettura: ~" + minutes + " min";
+        // Fonte A: Contenitore Galleria sotto il testo (#fe-option-b-media-container)
+        var mediaContainer = document.getElementById("fe-option-b-media-container");
+        if (mediaContainer) {
+            var imgsB = mediaContainer.querySelectorAll("img");
+            for (var i = 0; i < imgsB.length; i++) {
+                addUrl(imgsB[i].getAttribute("src") || imgsB[i].src);
+            }
+        }
+
+        // Fonte B: Eventuali miniature carosello o gallerie create da app.js dentro #view-article
+        var viewArticle = document.getElementById("view-article");
+        if (viewArticle) {
+            var allGalleryImgs = viewArticle.querySelectorAll(
+                ".interactive-media-wrapper img:not(#article-detail-image), [class*='gallery'] img, [class*='carousel'] img, [class*='extra'] img, [class*='thumb'] img"
+            );
+            for (var j = 0; j < allGalleryImgs.length; j++) {
+                addUrl(allGalleryImgs[j].getAttribute("src") || allGalleryImgs[j].src);
+            }
+        }
+
+        return urls;
     }
 
-    function distributeInlineExtraPhotos() {
+    // Divide il testo in paragrafi veri se era tutto attaccato o separato solo da <br>
+    function ensureParagraphBlocks(articleContainer) {
+        var hasFormattedP = articleContainer.querySelectorAll("p, h2, h3").length > 0;
+
+        if (!hasFormattedP) {
+            var raw = articleContainer.textContent || "";
+            if (raw.trim() !== "") {
+                articleContainer.innerHTML = formatMarkdown(raw);
+            }
+        }
+
+        // Se c'è un solo <p> con tanti <br> dentro, trasformiamo i <br> in paragrafi separati
+        var paragraphs = articleContainer.querySelectorAll("p");
+        if (paragraphs.length === 1) {
+            var inner = paragraphs[0].innerHTML;
+            if (inner.indexOf("<br") !== -1) {
+                var lines = inner.split(/(?:<br\s*\/?>)+/i).map(function (s) {
+                    return s.trim();
+                }).filter(Boolean);
+
+                if (lines.length > 1) {
+                    articleContainer.innerHTML = lines.map(function (line) {
+                        return '<p class="fe-article-paragraph">' + line + "</p>";
+                    }).join("");
+                }
+            }
+        }
+    }
+
+    // Distribuisce le foto in mezzo al testo (Testo -> Foto 1 -> Testo -> Foto 2 -> Testo)
+    function distributePhotosInArticle() {
         var articleContainer = document.getElementById("article-detail-content");
-        var mediaContainer = document.getElementById("fe-option-b-media-container");
+        if (!articleContainer) return;
 
-        if (!articleContainer || !mediaContainer) return;
+        var rawText = (articleContainer.textContent || "").trim();
+        if (!rawText) return;
 
-        // Se le foto sono già state distribuite per questo articolo, esce
-        if (articleContainer.querySelector(".fe-inline-extra-photo")) return;
+        // Prepariamo i paragrafi e mostriamo subito il tempo di lettura
+        ensureParagraphBlocks(articleContainer);
+        renderPublicReadingTime(articleContainer);
 
-        var extraImages = mediaContainer.querySelectorAll("img");
-        if (!extraImages || extraImages.length === 0) return;
+        var photoUrls = collectExtraPhotoUrls();
+        var titleEl = document.getElementById("article-detail-title");
+        var titleText = titleEl ? titleEl.textContent : "";
+        var currentSignature = titleText + "|" + rawText.length + "|" + photoUrls.join(",");
 
-        var blocks = articleContainer.querySelectorAll(
-            ".fe-article-paragraph, .fe-article-h2, .fe-article-h3, p"
+        // Se non ci sono foto extra, ci fermiamo qui (il tempo di lettura è già attivo)
+        if (photoUrls.length === 0) return;
+
+        // Evita di ri-distribuire all'infinito sullo stesso identico articolo
+        if (
+            lastProcessedSignature === currentSignature &&
+            articleContainer.querySelectorAll(".fe-inline-extra-photo").length === photoUrls.length
+        ) {
+            return;
+        }
+        lastProcessedSignature = currentSignature;
+
+        // Rimuoviamo eventuali vecchie foto inline prima di riposizionarle pulite
+        var oldFigures = articleContainer.querySelectorAll(".fe-inline-extra-photo");
+        for (var r = 0; r < oldFigures.length; r++) {
+            oldFigures[r].remove();
+        }
+
+        var blocks = Array.prototype.slice.call(
+            articleContainer.querySelectorAll("p, h2, h3")
         );
 
-        var imgList = Array.prototype.slice.call(extraImages);
-        var totalImgs = imgList.length;
+        // Se l'utente ha scritto un unico blocco senza mai andare a capo,
+        // lo spezziamo per frasi così le foto vanno comunque IN MEZZO al testo!
+        if (blocks.length < photoUrls.length + 1) {
+            var fullCleanText = (articleContainer.textContent || "").trim();
+            var sentences = fullCleanText.match(/[^.!?]+[.!?]+|\S+/g) || [fullCleanText];
 
-        // Se il testo è stato scritto tutto in un unico blocco senza doppi a capo,
-        // lo divide automaticamente in paragrafi così da poter intercalare le foto
-        if (blocks.length <= 1) {
-            var singleHtml = articleContainer.innerHTML;
-            var parts = singleHtml.split(/(?:<br\s*\/?>|\.\s+)/i).filter(function (s) {
-                return s && s.trim().length > 0;
-            });
+            if (sentences.length >= 2) {
+                var targetChunks = Math.max(photoUrls.length + 1, 2);
+                var perChunk = Math.max(1, Math.ceil(sentences.length / targetChunks));
+                var newHtml = "";
 
-            if (parts.length > 1) {
-                var rebuilt = [];
-                var chunkSize = Math.max(1, Math.ceil(parts.length / (totalImgs + 1)));
-
-                for (var c = 0; c < parts.length; c += chunkSize) {
-                    var slice = parts.slice(c, c + chunkSize).join(". ").trim();
-                    if (slice) {
-                        if (!/[.!?]$/.test(slice)) slice += ".";
-                        rebuilt.push('<p class="fe-article-paragraph">' + slice + "</p>");
+                for (var s = 0; s < sentences.length; s += perChunk) {
+                    var part = sentences.slice(s, s + perChunk).join(" ").trim();
+                    if (part) {
+                        newHtml += '<p class="fe-article-paragraph">' + escapeHtml(part) + "</p>";
                     }
                 }
 
-                if (rebuilt.length > 1) {
-                    articleContainer.innerHTML = rebuilt.join("");
-                    blocks = articleContainer.querySelectorAll(".fe-article-paragraph");
+                if (newHtml) {
+                    articleContainer.innerHTML = newHtml;
+                    blocks = Array.prototype.slice.call(articleContainer.querySelectorAll("p"));
                 }
             }
         }
 
+        // Inseriamo le foto intercalate nel testo in stile iSpazio
         var totalBlocks = blocks.length;
-        var step = Math.max(1, Math.floor(totalBlocks / (totalImgs + 1)));
+        var totalPhotos = photoUrls.length;
+        var step = Math.max(1, Math.floor(totalBlocks / (totalPhotos + 1)));
 
-        for (var i = 0; i < totalImgs; i++) {
-            var originalImg = imgList[i];
-            var src = originalImg.getAttribute("src");
-            if (!src) continue;
-
+        for (var k = 0; k < totalPhotos; k++) {
             var figure = document.createElement("figure");
             figure.className = "fe-inline-extra-photo";
 
-            var newImg = document.createElement("img");
-            newImg.src = src;
-            newImg.alt = originalImg.getAttribute("alt") || "Foto articolo";
-            newImg.loading = "lazy";
+            var img = document.createElement("img");
+            img.src = photoUrls[k];
+            img.alt = "Immagine " + (k + 1);
+            img.loading = "lazy";
 
-            // Mantiene il click per lo zoom se l'immagine originale era cliccabile
-            newImg.addEventListener("click", function (imgRef) {
-                return function () {
-                    imgRef.click();
-                };
-            }(originalImg));
+            figure.appendChild(img);
 
-            figure.appendChild(newImg);
+            // Calcolo indice per mettere Testo -> Foto -> Testo -> Foto
+            var insertIdx = Math.min(((k + 1) * step) - 1, totalBlocks - 1);
+            if (insertIdx < 0) insertIdx = 0;
 
-            var targetIndex = ((i + 1) * step) - 1;
-            if (targetIndex >= totalBlocks) {
-                targetIndex = totalBlocks - 1;
-            }
-
-            var targetBlock = blocks[targetIndex];
-            if (targetBlock && targetBlock.parentNode === articleContainer) {
-                targetBlock.insertAdjacentElement("afterend", figure);
+            var refBlock = blocks[insertIdx];
+            if (refBlock && refBlock.parentNode === articleContainer) {
+                refBlock.insertAdjacentElement("afterend", figure);
             } else {
                 articleContainer.appendChild(figure);
             }
-
-            // Nasconde la foto dal fondo pagina per non mostrarla doppia
-            var itemWrapper = originalImg.parentElement;
-            if (
-                itemWrapper &&
-                itemWrapper !== mediaContainer &&
-                itemWrapper.querySelectorAll("video, iframe").length === 0
-            ) {
-                itemWrapper.style.display = "none";
-            } else {
-                originalImg.style.display = "none";
-            }
         }
 
-        // Se nel contenitore in fondo non ci sono video, nasconde il blocco vuoto
-        var hasVideo = mediaContainer.querySelector("video, iframe");
-        if (!hasVideo) {
-            mediaContainer.style.display = "none";
-        }
-    }
-
-    function initMarkdownObserver() {
-        var articleContainer = document.getElementById(
-            "article-detail-content"
-        );
-        var mediaContainer = document.getElementById(
-            "fe-option-b-media-container"
-        );
-
-        if (!articleContainer) return;
-
-        var processing = false;
-
-        function applyFormatting() {
-            if (processing) return;
-
-            if (
-                articleContainer.childNodes.length === 1 &&
-                articleContainer.firstChild &&
-                articleContainer.firstChild.nodeType === 3
-            ) {
-                var rawText = articleContainer.textContent;
-
-                if (rawText && rawText.trim() !== "") {
-                    processing = true;
-                    if (mediaContainer) {
-                        mediaContainer.style.display = "";
-                    }
-                    articleContainer.innerHTML = formatMarkdown(rawText);
-                    processing = false;
+        // Nascondiamo le foto dal fondo pagina così non appaiono mai più ammassate sotto
+        var mediaContainer = document.getElementById("fe-option-b-media-container");
+        if (mediaContainer) {
+            var bottomImgs = mediaContainer.querySelectorAll("img");
+            for (var b = 0; b < bottomImgs.length; b++) {
+                var card = bottomImgs[b].parentElement;
+                if (card && card !== mediaContainer && card.querySelectorAll("video, iframe").length === 0) {
+                    card.style.display = "none";
+                } else {
+                    bottomImgs[b].style.display = "none";
                 }
             }
 
-            updatePublicReadingTime();
-            setTimeout(distributeInlineExtraPhotos, 60);
-            setTimeout(distributeInlineExtraPhotos, 250);
+            // Se non c'è un video nel box in fondo, nascondiamo completamente il box in fondo
+            var hasVideo = mediaContainer.querySelector("video, iframe");
+            if (!hasVideo) {
+                mediaContainer.style.display = "none";
+            }
+        }
+    }
+
+    // Fallback automatico: se l'articolo è un "Outfit" e app.js non ha messo le foto extra nel DOM,
+    // le peschiamo direttamente da Supabase per l'articolo aperto e le mettiamo in mezzo al testo!
+    function fetchExtraPhotosFromSupabaseIfNeeded() {
+        var viewArticle = document.getElementById("view-article");
+        if (!viewArticle || viewArticle.classList.contains("hidden")) return;
+
+        var currentPhotos = collectExtraPhotoUrls();
+        if (currentPhotos.length > 0) return;
+
+        var titleEl = document.getElementById("article-detail-title");
+        if (!titleEl || !titleEl.textContent.trim()) return;
+
+        // Cerchiamo se il client Supabase o gli articoli sono già in memoria
+        try {
+            var mainImg = document.getElementById("article-detail-image");
+            var mainSrc = mainImg ? (mainImg.getAttribute("src") || "").trim() : "";
+            var mediaContainer = document.getElementById("fe-option-b-media-container");
+            if (!mediaContainer) return;
+
+            // Controlliamo se nei tag script o oggetti globali c'è la lista articoli
+            var injectUrlsToMediaBox = function (arr) {
+                if (!arr || !arr.length) return;
+                for (var i = 0; i < arr.length; i++) {
+                    var u = typeof arr[i] === "string" ? arr[i] : (arr[i] && (arr[i].url || arr[i].src));
+                    if (u && u !== mainSrc) {
+                        var hiddenImg = document.createElement("img");
+                        hiddenImg.src = u;
+                        hiddenImg.style.display = "none";
+                        mediaContainer.appendChild(hiddenImg);
+                    }
+                }
+                distributePhotosInArticle();
+            };
+
+            if (window.articles && Array.isArray(window.articles)) {
+                var found = window.articles.find(function (a) {
+                    return a && a.title === titleEl.textContent.trim();
+                });
+                if (found) {
+                    var extras = found.extra_images || found.gallery || found.images || found.media || [];
+                    if (typeof extras === "string") {
+                        try { extras = JSON.parse(extras); } catch (e) {}
+                    }
+                    if (Array.isArray(extras) && extras.length > 0) {
+                        injectUrlsToMediaBox(extras);
+                    }
+                }
+            }
+        } catch (err) {}
+    }
+
+    function initMarkdownObserver() {
+        var viewArticle = document.getElementById("view-article");
+        var articleContainer = document.getElementById("article-detail-content");
+        var mediaContainer = document.getElementById("fe-option-b-media-container");
+
+        if (!articleContainer) return;
+
+        var timer = null;
+        function triggerEnhance() {
+            if (timer) clearTimeout(timer);
+            timer = setTimeout(function () {
+                distributePhotosInArticle();
+                fetchExtraPhotosFromSupabaseIfNeeded();
+            }, 80);
         }
 
-        applyFormatting();
-
-        var observer = new MutationObserver(function () {
-            applyFormatting();
+        // Osserva il testo dell'articolo
+        var textObs = new MutationObserver(triggerEnhance);
+        textObs.observe(articleContainer, {
+            childList: true,
+            subtree: true,
+            characterData: true
         });
 
-        observer.observe(articleContainer, {
-            childList: true
-        });
-
+        // Osserva il box galleria in fondo
         if (mediaContainer) {
-            var mediaObserver = new MutationObserver(function () {
-                setTimeout(distributeInlineExtraPhotos, 50);
-            });
-
-            mediaObserver.observe(mediaContainer, {
+            var mediaObs = new MutationObserver(triggerEnhance);
+            mediaObs.observe(mediaContainer, {
                 childList: true,
                 subtree: true,
                 attributes: true
             });
         }
+
+        // Osserva quando l'utente apre un articolo (cambio classe hidden su #view-article)
+        if (viewArticle) {
+            var viewObs = new MutationObserver(function () {
+                if (!viewArticle.classList.contains("hidden")) {
+                    triggerEnhance();
+                    setTimeout(distributePhotosInArticle, 300);
+                    setTimeout(distributePhotosInArticle, 700);
+                }
+            });
+            viewObs.observe(viewArticle, {
+                attributes: true,
+                attributeFilter: ["class"]
+            });
+        }
+
+        triggerEnhance();
     }
 
 
@@ -370,23 +512,23 @@
                 display: inline-flex;
                 align-items: center;
                 gap: 7px;
-                margin: 4px 0 28px;
-                padding: 7px 12px;
+                margin: 10px 0 18px;
+                padding: 8px 14px;
                 background: #f4f4f5;
-                color: #52525b;
+                color: #18181b;
                 border: 1px solid #e4e4e7;
                 border-radius: 999px;
-                font-size: 0.78rem;
+                font-size: 0.82rem;
                 font-weight: 700;
                 line-height: 1;
             }
 
-            /* Foto extra distribuite nel corpo dell'articolo */
+            /* Foto extra distribuite nel corpo dell'articolo (Stile iSpazio) */
             .fe-inline-extra-photo {
                 display: block;
                 width: 100%;
                 max-width: 900px;
-                margin: 46px auto;
+                margin: 36px auto;
                 padding: 0;
                 text-align: center;
             }
@@ -395,24 +537,23 @@
                 display: block;
                 width: 100%;
                 max-width: 100%;
-                max-height: 900px;
+                max-height: 850px;
                 height: auto;
                 margin: 0 auto;
-                object-fit: contain;
+                object-fit: cover;
                 border-radius: 16px;
                 box-shadow: 0 12px 35px rgba(0, 0, 0, 0.08);
-                cursor: zoom-in;
             }
 
             @media (max-width: 600px) {
                 .fe-public-reading-time {
-                    margin-bottom: 20px;
-                    font-size: 0.73rem;
+                    margin-bottom: 14px;
+                    font-size: 0.75rem;
                 }
 
                 .fe-inline-extra-photo {
-                    margin-top: 32px;
-                    margin-bottom: 32px;
+                    margin-top: 26px;
+                    margin-bottom: 26px;
                 }
 
                 .fe-inline-extra-photo img {
@@ -426,7 +567,7 @@
 
 
     /* ==========================================================================
-       4. CSS ADMIN PRO
+       4. CSS ADMIN PRO (INTATTO)
        ========================================================================== */
 
     function injectProStyles() {
@@ -1240,7 +1381,7 @@
 
 
     /* ==========================================================================
-       5. UTILITY DOM
+       5. UTILITY DOM (INTATTO)
        ========================================================================== */
 
     function addCardClass(element) {
@@ -1260,7 +1401,7 @@
 
 
     /* ==========================================================================
-       6. CREA LAYOUT ADMIN
+       6. CREA LAYOUT ADMIN (INTATTO)
        ========================================================================== */
 
     function buildAdminLayout() {
@@ -1310,11 +1451,6 @@
             return;
         }
 
-
-        /* ------------------------------------------------------------------
-           Trova contenitori
-           ------------------------------------------------------------------ */
-
         var titleBox = closestUsefulContainer(title);
         var categoryBox = closestUsefulContainer(category);
         var excerptBox = closestUsefulContainer(excerpt);
@@ -1329,11 +1465,6 @@
                 saveButton.closest(".admin-form-actions") ||
                 saveButton.parentElement;
         }
-
-
-        /* ------------------------------------------------------------------
-           Individua box foto/video aggiuntivi
-           ------------------------------------------------------------------ */
 
         var extraBox = null;
 
@@ -1356,11 +1487,6 @@
             }
         }
 
-
-        /* ------------------------------------------------------------------
-           Wrapper layout
-           ------------------------------------------------------------------ */
-
         var layout = document.createElement("div");
         layout.className = "fe-admin-layout";
 
@@ -1377,11 +1503,6 @@
             layout,
             form.firstChild
         );
-
-
-        /* ------------------------------------------------------------------
-           Sinistra
-           ------------------------------------------------------------------ */
 
         var movedMain = [];
 
@@ -1402,11 +1523,6 @@
                 addCardClass(box);
             }
         });
-
-
-        /* ------------------------------------------------------------------
-           Destra
-           ------------------------------------------------------------------ */
 
         var movedSidebar = [];
 
@@ -1436,11 +1552,6 @@
             }
         });
 
-
-        /* ------------------------------------------------------------------
-           Elementi rimasti nel form
-           ------------------------------------------------------------------ */
-
         var remaining = Array.prototype.slice.call(
             form.children
         );
@@ -1454,8 +1565,6 @@
                 return;
             }
 
-            // Se è un elemento visibile rimasto,
-            // lo mettiamo nella colonna principale.
             main.appendChild(element);
 
             if (
@@ -1472,7 +1581,7 @@
 
 
     /* ==========================================================================
-       7. PERSONALIZZAZIONE BOX
+       7. PERSONALIZZAZIONE BOX (INTATTO)
        ========================================================================== */
 
     function upgradeBoxes() {
@@ -1532,7 +1641,7 @@
             }
 
             content.placeholder =
-                "Scrivi qui il tuo articolo...\n\nPuoi usare **testo in grassetto**, *corsivo* e ## titoli.";
+                "Scrivi qui il tuo articolo...\n\nVai a capo per dividere i paragrafi: le foto extra verranno inserite automaticamente in mezzo al testo (stile iSpazio).";
         }
 
 
@@ -1572,11 +1681,6 @@
                 "Oppure incolla l'URL dell'immagine...";
         }
 
-
-        /* ------------------------------------------------------------------
-           Foto aggiuntive
-           ------------------------------------------------------------------ */
-
         var form = document.getElementById(
             "form-admin-article"
         );
@@ -1600,11 +1704,6 @@
                 }
             }
         }
-
-
-        /* ------------------------------------------------------------------
-           Pubblicazione
-           ------------------------------------------------------------------ */
 
         var publishedLabel =
             document.querySelector(
@@ -1640,7 +1739,7 @@
 
 
     /* ==========================================================================
-       8. CATEGORIE A BOTTONI
+       8. CATEGORIE A BOTTONI (INTATTO)
        ========================================================================== */
 
     function createCategoryButtons() {
@@ -1745,7 +1844,7 @@
 
 
     /* ==========================================================================
-       9. CONTATORE PAROLE / CARATTERI / LETTURA
+       9. CONTATORE PAROLE / CARATTERI / LETTURA ADMIN (INTATTO)
        ========================================================================== */
 
     function createWritingStats() {
@@ -1883,7 +1982,7 @@
 
 
     /* ==========================================================================
-       10. TESTO PULSANTE PUBBLICA / BOZZA
+       10. TESTO PULSANTE PUBBLICA / BOZZA (INTATTO)
        ========================================================================== */
 
     function setupPublishButton() {
@@ -1933,7 +2032,7 @@
 
 
     /* ==========================================================================
-       11. SINCRONIZZAZIONE DOPO RESET
+       11. SINCRONIZZAZIONE DOPO RESET (INTATTO)
        ========================================================================== */
 
     function setupResetSync() {
@@ -1970,7 +2069,7 @@
 
 
     /* ==========================================================================
-       12. ACCESSIBILITÀ E PICCOLE MIGLIORIE
+       12. ACCESSIBILITÀ E PICCOLE MIGLIORIE (INTATTO)
        ========================================================================== */
 
     function improveAccessibility() {
@@ -2015,7 +2114,7 @@
 
 
     /* ==========================================================================
-       13. UPGRADE COMPLETO
+       13. UPGRADE COMPLETO (INTATTO)
        ========================================================================== */
 
     function upgradeAdminPanel() {
@@ -2037,7 +2136,7 @@
 
 
     /* ==========================================================================
-       14. OBSERVER SICURO
+       14. OBSERVER SICURO (INTATTO)
        ========================================================================== */
 
     function initAdminObserver() {
@@ -2115,8 +2214,6 @@
 
         initAdminObserver();
 
-        // Secondo controllo perché alcuni elementi
-        // possono essere creati da app.js dopo il caricamento.
         setTimeout(
             function () {
                 upgradeAdminPanel();
