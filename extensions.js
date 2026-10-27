@@ -1,6 +1,6 @@
 /* ==========================================================================
    FUORI ETICHETTA - EXTENSIONS, STUDIO ADMIN PRO & ISPAZIO LAYOUT
-   (Safe Mode: Anti-Loop Infinito + Edit Commenti Integrato e Corretto)
+   (Safe Mode: Anti-Loop Infinito + Async Edit Commenti Definitivo)
    ========================================================================== */
 
 (function () {
@@ -83,7 +83,6 @@
         var mainImg = document.getElementById("article-detail-image");
         var mainSrc = mainImg ? (mainImg.getAttribute("src") || mainImg.src) : "";
 
-        // PULIZIA IN ALTO
         var topWrapper = document.querySelector(".interactive-media-wrapper");
         if (topWrapper) {
             var topImgs = topWrapper.querySelectorAll("img");
@@ -101,7 +100,6 @@
             }
         }
 
-        // PULIZIA IN BASSO
         var bottomWrapper = document.getElementById("fe-option-b-media-container");
         if (bottomWrapper) {
             var botImgs = bottomWrapper.querySelectorAll("img");
@@ -202,13 +200,14 @@
 
 
     /* ==========================================================================
-       4. MODIFICA DEI PROPRI COMMENTI (CORRETTO)
+       4. MODIFICA DEI PROPRI COMMENTI (BLINDATO CON ASYNC/AWAIT & TRY/CATCH)
        ========================================================================== */
 
     function initCommentsEditor() {
         var commentsList = document.getElementById("comments-list");
         if (!commentsList) return;
 
+        // Sensore che individua i nuovi commenti per aggiungere il tasto "Modifica"
         var obs = new MutationObserver(function () {
             obs.disconnect();
             var deleteBtns = commentsList.querySelectorAll('button[data-action="delete-comment"]');
@@ -228,9 +227,13 @@
         
         obs.observe(commentsList, { childList: true, subtree: true });
 
-        commentsList.addEventListener("click", function(e) {
+        // Gestione Click Asincrona Protetta
+        commentsList.addEventListener("click", async function(e) {
+            
+            // Apertura editor
             var btnEdit = e.target.closest(".fe-btn-edit-comment");
             if (btnEdit) {
+                e.preventDefault();
                 var commentItem = btnEdit.closest(".comment-item");
                 var textContainer = commentItem.querySelector(".comment-text");
                 var actionsContainer = commentItem.querySelector(".comment-actions");
@@ -252,8 +255,10 @@
                 return;
             }
 
+            // Annullamento modifica
             var btnCancel = e.target.closest(".fe-btn-cancel-edit");
             if (btnCancel) {
+                e.preventDefault();
                 var commentItemC = btnCancel.closest(".comment-item");
                 var textContainerC = commentItemC.querySelector(".comment-text");
                 var actionsContainerC = commentItemC.querySelector(".comment-actions");
@@ -263,37 +268,47 @@
                 return;
             }
 
+            // Salvataggio su database (TRY-CATCH)
             var btnSave = e.target.closest(".fe-btn-save-edit");
             if (btnSave) {
+                e.preventDefault();
                 var commentItemS = btnSave.closest(".comment-item");
-                var newText = commentItemS.querySelector(".fe-edit-textarea").value.trim();
+                var textareaS = commentItemS.querySelector(".fe-edit-textarea");
+                var newText = textareaS.value.trim();
                 var cId = btnSave.getAttribute("data-id");
+                
                 if (!newText) return;
 
-                btnSave.textContent = "Salvataggio...";
+                btnSave.textContent = "Salvataggio in corso...";
                 btnSave.disabled = true;
+                textareaS.disabled = true;
 
-                // CORREZIONE COLLEGAMENTO DATABASE SUPABASE
-                var dbClient = typeof supabaseClient !== "undefined" ? supabaseClient : null;
-                
-                if (dbClient) {
-                    dbClient.from('comments').update({ content: newText }).eq('id', cId)
-                        .then(function(res) {
-                            if (res.error) {
-                                alert("Errore durante la modifica: " + res.error.message);
-                                btnSave.textContent = "Salva Modifiche";
-                                btnSave.disabled = false;
-                            } else {
-                                var textContainerS = commentItemS.querySelector(".comment-text");
-                                var actionsContainerS = commentItemS.querySelector(".comment-actions");
-                                textContainerS.textContent = newText;
-                                actionsContainerS.style.display = "";
-                            }
-                        });
-                } else {
-                    alert("Errore di rete: impossibile raggiungere il database.");
+                try {
+                    // Verifica che il client del database esista
+                    if (typeof supabaseClient === "undefined" || !supabaseClient) {
+                        throw new Error("Connessione al database non rilevata.");
+                    }
+
+                    // Tenta la scrittura a schermo bloccato
+                    var response = await supabaseClient.from('comments').update({ content: newText }).eq('id', cId);
+
+                    // Verifica se Supabase ha rimandato un errore interno (es: RLS Permission Error)
+                    if (response.error) {
+                        throw new Error(response.error.message);
+                    }
+
+                    // Se arriviamo qui, il salvataggio è andato a buon fine
+                    var textContainerS = commentItemS.querySelector(".comment-text");
+                    var actionsContainerS = commentItemS.querySelector(".comment-actions");
+                    textContainerS.textContent = newText;
+                    actionsContainerS.style.display = "";
+
+                } catch (err) {
+                    // Se fallisce, ripristina i tasti e mostra il motivo
+                    alert("Impossibile salvare il commento. Motivo: " + (err.message || "Permessi insufficienti o errore di rete."));
                     btnSave.textContent = "Salva Modifiche";
                     btnSave.disabled = false;
+                    textareaS.disabled = false;
                 }
             }
         });
