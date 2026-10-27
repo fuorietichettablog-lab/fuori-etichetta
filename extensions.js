@@ -370,288 +370,8 @@
             document.head.appendChild(stylePub);
         }
 
-        if (!document.getElementById("fe-pro-admin-styles")) {
-            var admCss = `
-                #view-admin:not(.hidden) {
-                    max-width: 1500px !important;
-                    margin: 0 auto !important;
-                    padding: 30px 30px 90px !important;
-                    display: grid !important;
-                    grid-template-columns: 238px minmax(0, 1fr) !important;
-                    grid-template-areas: "header header" "nav content" !important;
-                    gap: 22px 26px !important;
-                    align-items: start !important;
-                    box-sizing: border-box !important;
-                }
-                #view-admin *, #view-admin *::before, #view-admin *::after { box-sizing: border-box !important; }
-                #view-admin button, #view-admin input, #view-admin textarea, #view-admin select { font-family: inherit !important; }
+        // Il layout amministrativo viene ora gestito dal foglio style.css
 
-                #view-admin .admin-top-bar {
-                    grid-area: header !important;
-                    display: flex !important;
-                    align-items: center !important;
-                    justify-content: space-between !important;
-                    gap: 24px !important;
-                    min-height: 104px !important;
-                    margin: 0 !important;
-                    padding: 22px 26px !important;
-                    background: linear-gradient(135deg, #09090b 0%, #18181b 68%, #27272a 100%) !important;
-                    color: #ffffff !important;
-                    border-radius: 22px !important;
-                    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.13) !important;
-                    overflow: hidden !important;
-                    position: relative !important;
-                }
-                #view-admin .admin-top-bar::after {
-                    content: "" !important;
-                    position: absolute !important;
-                    width: 210px !important;
-                    height: 210px !important;
-                    right: 16% !important;
-                    top: -125px !important;
-                    border-radius: 50% !important;
-                    background: rgba(255,255,255,0.045) !important;
-                    pointer-events: none !important;
-                }
-                #view-admin .admin-top-bar > div:first-child { min-width: 0 !important; position: relative !important; z-index: 1 !important; }
-                #view-admin .admin-top-bar .catalog-title {
-                    color: #ffffff !important;
-                    font-size: clamp(1.25rem, 2vw, 1.7rem) !important;
-                    font-weight: 850 !important;
-                    letter-spacing: -0.035em !important;
-                    margin: 0 !important;
-                    line-height: 1.15 !important;
-                }
-                #view-admin .admin-top-bar .catalog-subtitle {
-                    display: block !important;
-                    max-width: 720px !important;
-                    margin: 7px 0 0 !important;
-                    color: rgba(255,255,255,0.66) !important;
-                    font-size: 0.84rem !important;
-                    line-height: 1.45 !important;
-                }
-                .fe-panel-meta { display: flex !important; align-items: center !important; flex-wrap: wrap !important; gap: 8px !important; margin-top: 12px !important; }
-                .fe-panel-role-pill {
-                    display: inline-flex !important;
-                    align-items: center !important;
-                    min-height: 25px !important;
-                    padding: 4px 9px !important;
-                    border: 1px solid rgba(255,255,255,0.16) !important;
-                    background: rgba(255,255,255,0.09) !important;
-                    color: #ffffff !important;
-                    border-radius: 999px !important;
-                    font-size: 0.66rem !important;
-                    font-weight: 850 !important;
-                    letter-spacing: 0.075em !important;
-                    text-transform: uppercase !important;
-                }
-                .fe-panel-user-name { color: rgba(255,255,255,0.62) !important; font-size: 0.74rem !important; font-weight: 650 !important; }
-                #view-admin #btn-close-admin {
-                    position: relative !important;
-                    z-index: 1 !important;
-                    flex: 0 0 auto !important;
-                    min-height: 42px !important;
-                    padding: 9px 14px !important;
-                    background: rgba(255,255,255,0.08) !important;
-                    color: #ffffff !important;
-                    border: 1px solid rgba(255,255,255,0.17) !important;
-                    border-radius: 11px !important;
-                    font-size: 0.79rem !important;
-                    font-weight: 750 !important;
-                    cursor: pointer !important;
-                    transition: 0.18s ease !important;
-                }
-                #view-admin #btn-close-admin:hover { background: rgba(255,255,255,0.15) !important; transform: translateY(-1px) !important; }
-
-                #view-admin .admin-tabs {
-                    grid-area: nav !important;
-                    position: sticky !important;
-                    top: 22px !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: stretch !important;
-                    gap: 6px !important;
-                    width: 100% !important;
-                    margin: 0 !important;
-                    padding: 10px !important;
-                    background: #ffffff !important;
-                    border: 1px solid #e4e4e7 !important;
-                    border-radius: 18px !important;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.045) !important;
-                }
-                #view-admin .admin-tab.hidden, #view-admin .admin-tab-content.hidden, #view-admin [data-admin-only="true"].hidden { display: none !important; }
-                #view-admin .admin-tabs::before {
-                    content: "NAVIGAZIONE" !important;
-                    padding: 7px 9px 5px !important;
-                    color: #a1a1aa !important;
-                    font-size: 0.63rem !important;
-                    font-weight: 850 !important;
-                    letter-spacing: 0.09em !important;
-                }
-                #view-admin .admin-tab {
-                    position: relative !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    justify-content: center !important;
-                    width: 100% !important;
-                    min-height: 58px !important;
-                    padding: 10px 38px 10px 12px !important;
-                    background: transparent !important;
-                    color: #3f3f46 !important;
-                    border: 1px solid transparent !important;
-                    border-radius: 12px !important;
-                    text-align: left !important;
-                    font-size: 0.82rem !important;
-                    line-height: 1.2 !important;
-                    font-weight: 780 !important;
-                    cursor: pointer !important;
-                    transition: 0.16s ease !important;
-                }
-                #view-admin .admin-tab::after { display: block !important; margin-top: 4px !important; color: #a1a1aa !important; font-size: 0.66rem !important; font-weight: 600 !important; line-height: 1.25 !important; }
-                #view-admin .admin-tab[data-tab="tab-editor"]::after { content: "Scrittura e media" !important; }
-                #view-admin .admin-tab[data-tab="tab-manage-articles"]::after { content: "Archivio editoriale" !important; }
-                #view-admin .admin-tab[data-tab="tab-collaborators"]::after { content: "Permessi e approvazioni" !important; }
-                #view-admin .admin-tab[data-tab="tab-moderation"]::after { content: "Segnalazioni e commenti" !important; }
-                #view-admin .admin-tab[data-tab="tab-users"]::after { content: "Account registrati" !important; }
-                #view-admin .admin-tab:hover { background: #f7f7f8 !important; color: #09090b !important; }
-                #view-admin .admin-tab.active { background: #09090b !important; color: #ffffff !important; border-color: #09090b !important; box-shadow: 0 7px 18px rgba(0,0,0,0.11) !important; }
-                #view-admin .admin-tab.active::after { color: rgba(255,255,255,0.55) !important; }
-                #view-admin .admin-tab .badge-alert { position: absolute !important; right: 10px !important; top: 10px !important; }
-                #view-admin > .admin-tab-content:not(.hidden) { grid-area: content !important; min-width: 0 !important; }
-
-                #view-admin > .admin-tab-content > .admin-card,
-                #view-admin #tab-collaborators > .admin-card {
-                    background: #ffffff !important;
-                    border: 1px solid #e4e4e7 !important;
-                    border-radius: 18px !important;
-                    box-shadow: 0 10px 30px rgba(0,0,0,0.035) !important;
-                }
-                #view-admin > .admin-tab-content > .admin-card { padding: 22px !important; }
-                #view-admin .admin-card h3 { margin: 0 0 7px !important; color: #18181b !important; font-size: 1rem !important; font-weight: 820 !important; letter-spacing: -0.018em !important; }
-                #view-admin .field-help { color: #71717a !important; line-height: 1.5 !important; }
-                #view-admin .divider { margin: 24px 0 !important; border-color: #ececef !important; }
-
-                #tab-collaborators:not(.hidden) {
-                    display: grid !important;
-                    grid-template-columns: minmax(260px, 0.78fr) minmax(0, 1.45fr) !important;
-                    grid-template-areas: "settings pending" "add people" !important;
-                    gap: 18px !important;
-                    align-items: start !important;
-                }
-                #tab-collaborators:not(.hidden) > .admin-card { margin: 0 !important; padding: 22px !important; }
-                #tab-collaborators:not(.hidden) > .admin-card:nth-child(1) { grid-area: settings !important; }
-                #tab-collaborators:not(.hidden) > .admin-card:nth-child(2) { grid-area: add !important; }
-                #tab-collaborators:not(.hidden) > .admin-card:nth-child(3) { grid-area: pending !important; }
-                #tab-collaborators:not(.hidden) > .admin-card:nth-child(4) { grid-area: people !important; }
-                #tab-collaborators #admin-require-approval-toggle { width: 17px !important; height: 17px !important; accent-color: #09090b !important; }
-                #tab-collaborators .checkbox-group { padding: 14px !important; background: #fafafa !important; border: 1px solid #ececef !important; border-radius: 12px !important; }
-                #tab-collaborators #admin-promote-user-select { min-height: 44px !important; border-radius: 11px !important; background: #fafafa !important; }
-                #tab-collaborators #btn-promote-collaborator { min-height: 44px !important; border-radius: 11px !important; font-weight: 780 !important; }
-
-                #view-admin .admin-list-container { display: flex !important; flex-direction: column !important; gap: 9px !important; margin-top: 14px !important; }
-                #view-admin .admin-list-row {
-                    display: grid !important;
-                    grid-template-columns: minmax(0,1fr) auto !important;
-                    gap: 14px !important;
-                    align-items: center !important;
-                    padding: 14px 15px !important;
-                    background: #fafafa !important;
-                    border: 1px solid #ececef !important;
-                    border-radius: 13px !important;
-                    transition: 0.15s ease !important;
-                }
-                #view-admin .admin-list-row:hover { background: #ffffff !important; border-color: #d4d4d8 !important; box-shadow: 0 7px 20px rgba(0,0,0,0.035) !important; }
-                #view-admin .admin-list-row strong { color: #18181b !important; font-weight: 790 !important; }
-                #view-admin .admin-list-row .btn-sm { min-height: 34px !important; border-radius: 9px !important; white-space: nowrap !important; }
-
-                #form-admin-article { display: block !important; margin: 0 !important; padding: 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
-                #form-admin-article .fe-admin-layout { display: grid !important; grid-template-columns: minmax(0, 1.62fr) minmax(310px, 0.78fr) !important; gap: 20px !important; align-items: start !important; }
-                #form-admin-article .fe-admin-main, #form-admin-article .fe-admin-sidebar { min-width: 0 !important; display: flex !important; flex-direction: column !important; gap: 14px !important; }
-                .fe-editor-section-heading { padding: 1px 2px 2px !important; }
-                .fe-editor-section-heading strong { display: block !important; color: #18181b !important; font-size: 0.93rem !important; font-weight: 850 !important; letter-spacing: -0.015em !important; }
-                .fe-editor-section-heading span { display: block !important; margin-top: 3px !important; color: #a1a1aa !important; font-size: 0.69rem !important; line-height: 1.35 !important; }
-                #form-admin-article .fe-admin-card { width: 100% !important; margin: 0 !important; padding: 20px !important; background: #ffffff !important; border: 1px solid #e4e4e7 !important; border-radius: 16px !important; box-shadow: 0 7px 22px rgba(0,0,0,0.03) !important; }
-                #form-admin-article .fe-editor-basics { padding: 22px !important; }
-                #form-admin-article .fe-editor-basics .form-row-2 { margin: 0 0 16px !important; }
-                #form-admin-article .fe-editor-basics .form-group { margin: 0 !important; padding: 0 !important; background: transparent !important; border: 0 !important; box-shadow: none !important; }
-                #form-admin-article .fe-editor-basics .fe-box-excerpt { margin-top: 16px !important; }
-                #form-admin-article .fe-box-content { padding: 22px !important; }
-                #form-admin-article label { display: block !important; margin: 0 0 8px !important; color: #71717a !important; font-size: 0.68rem !important; font-weight: 850 !important; letter-spacing: 0.06em !important; text-transform: uppercase !important; }
-                #form-admin-article .checkbox-group label { margin: 0 !important; color: #18181b !important; font-size: 0.84rem !important; font-weight: 720 !important; letter-spacing: 0 !important; text-transform: none !important; }
-                #form-admin-article input[type='text'], #form-admin-article input[type='url'], #form-admin-article input[type='email'], #form-admin-article select, #form-admin-article textarea { width: 100% !important; color: #18181b !important; background: #fafafa !important; border: 1px solid #e4e4e7 !important; border-radius: 11px !important; outline: none !important; transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease !important; }
-                #form-admin-article input[type='text'], #form-admin-article input[type='url'], #form-admin-article input[type='email'], #form-admin-article select { min-height: 43px !important; padding: 10px 12px !important; font-size: 0.9rem !important; }
-                #form-admin-article textarea { padding: 14px !important; resize: vertical !important; }
-                #form-admin-article input:focus, #form-admin-article textarea:focus, #form-admin-article select:focus { background: #ffffff !important; border-color: #18181b !important; box-shadow: 0 0 0 3px rgba(24,24,27,0.055) !important; }
-                #admin-article-title { min-height: auto !important; padding: 5px 0 10px !important; background: transparent !important; border: none !important; border-bottom: 2px solid #e4e4e7 !important; border-radius: 0 !important; box-shadow: none !important; color: #09090b !important; font-size: clamp(1.5rem, 2.2vw, 2.1rem) !important; font-weight: 850 !important; letter-spacing: -0.038em !important; }
-                #admin-article-title:focus { border-bottom-color: #09090b !important; box-shadow: none !important; }
-                #admin-article-excerpt { min-height: 76px !important; font-size: 0.94rem !important; line-height: 1.55 !important; }
-                #admin-article-content { min-height: 570px !important; padding: 20px !important; background: #fbfbfb !important; color: #18181b !important; font-family: Georgia, 'Times New Roman', serif !important; font-size: 1.04rem !important; line-height: 1.82 !important; border-radius: 13px !important; }
-                #admin-article-content:focus { background: #ffffff !important; }
-                .fe-writing-stats { display: flex !important; flex-wrap: wrap !important; gap: 7px !important; margin-top: 10px !important; }
-                .fe-stat-pill { display: inline-flex !important; align-items: center !important; min-height: 27px !important; padding: 5px 9px !important; background: #f4f4f5 !important; color: #71717a !important; border-radius: 999px !important; font-size: 0.68rem !important; font-weight: 720 !important; }
-                .fe-cat-pills { display: grid !important; grid-template-columns: repeat(3, minmax(0,1fr)) !important; gap: 7px !important; margin-top: 5px !important; }
-                .fe-cat-btn { min-height: 40px !important; padding: 8px !important; background: #fafafa !important; color: #52525b !important; border: 1px solid #e4e4e7 !important; border-radius: 10px !important; font-size: 0.81rem !important; font-weight: 760 !important; cursor: pointer !important; transition: 0.15s ease !important; }
-                .fe-cat-btn:hover { background: #f4f4f5 !important; color: #09090b !important; transform: translateY(-1px) !important; }
-                .fe-cat-btn.active { background: #09090b !important; color: #ffffff !important; border-color: #09090b !important; }
-                #form-admin-article input[type='file'] { width: 100% !important; padding: 10px !important; background: #fafafa !important; border: 1.5px dashed #d4d4d8 !important; border-radius: 11px !important; color: #52525b !important; font-size: 0.76rem !important; cursor: pointer !important; }
-                #form-admin-article input[type='file']::file-selector-button { margin-right: 10px !important; padding: 7px 10px !important; background: #18181b !important; color: #ffffff !important; border: none !important; border-radius: 8px !important; font-weight: 750 !important; font-size: 0.74rem !important; cursor: pointer !important; }
-                #form-admin-article img { max-width: 100% !important; height: auto !important; border-radius: 12px !important; }
-                #form-admin-article .field-help, #form-admin-article .or-divider { color: #a1a1aa !important; font-size: 0.71rem !important; line-height: 1.45 !important; }
-                #form-admin-article .fe-box-extra p { margin: 6px 0 !important; color: #71717a !important; font-size: 0.74rem !important; line-height: 1.45 !important; }
-                #form-admin-article .checkbox-group { display: flex !important; align-items: center !important; gap: 10px !important; padding: 14px 15px !important; background: #fafafa !important; border: 1px solid #e4e4e7 !important; border-radius: 13px !important; }
-                #form-admin-article input[type='checkbox'] { width: 17px !important; height: 17px !important; accent-color: #09090b !important; cursor: pointer !important; }
-                #collaborator-submit-hint { margin: 0 !important; padding: 14px 15px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-left: 3px solid #18181b !important; border-radius: 12px !important; color: #475569 !important; font-size: 0.76rem !important; line-height: 1.5 !important; box-shadow: none !important; }
-                #form-admin-article .admin-form-actions { display: grid !important; grid-template-columns: minmax(0,0.72fr) minmax(0,1.35fr) !important; gap: 8px !important; width: 100% !important; padding: 4px 0 0 !important; background: transparent !important; border: none !important; box-shadow: none !important; }
-                #btn-save-article { min-height: 48px !important; padding: 12px 18px !important; background: #09090b !important; color: #ffffff !important; border: 1px solid #09090b !important; border-radius: 11px !important; font-size: 0.88rem !important; font-weight: 820 !important; cursor: pointer !important; transition: 0.15s ease !important; }
-                #btn-save-article:hover { transform: translateY(-1px) !important; box-shadow: 0 8px 20px rgba(0,0,0,0.14) !important; }
-                #btn-reset-article-form { min-height: 48px !important; padding: 12px 14px !important; background: #ffffff !important; color: #52525b !important; border: 1px solid #e4e4e7 !important; border-radius: 11px !important; font-size: 0.79rem !important; font-weight: 720 !important; cursor: pointer !important; }
-                #btn-reset-article-form:hover { background: #f4f4f5 !important; color: #09090b !important; }
-                .fe-role-collaborator #collaborator-submit-hint:not(.hidden) { background: #fffaf0 !important; border-color: #fde7b2 !important; border-left-color: #b7791f !important; color: #744210 !important; }
-
-                @media (min-width: 981px) {
-                    #form-admin-article .fe-admin-sidebar { position: sticky !important; top: 22px !important; }
-                }
-                @media (max-width: 1180px) {
-                    #view-admin:not(.hidden) { grid-template-columns: 210px minmax(0,1fr) !important; padding: 22px 20px 70px !important; gap: 18px !important; }
-                    #form-admin-article .fe-admin-layout { grid-template-columns: minmax(0,1.38fr) minmax(280px,0.82fr) !important; gap: 16px !important; }
-                    #admin-article-content { min-height: 500px !important; }
-                }
-                @media (max-width: 980px) {
-                    #view-admin:not(.hidden) { display: block !important; padding: 18px 16px 65px !important; }
-                    #view-admin .admin-top-bar { margin-bottom: 14px !important; min-height: 88px !important; border-radius: 18px !important; }
-                    #view-admin .admin-tabs { position: static !important; display: flex !important; flex-direction: row !important; width: 100% !important; overflow-x: auto !important; gap: 6px !important; margin-bottom: 16px !important; padding: 6px !important; border-radius: 14px !important; }
-                    #view-admin .admin-tabs::before { display: none !important; }
-                    #view-admin .admin-tab { flex: 0 0 auto !important; width: auto !important; min-width: 145px !important; min-height: 48px !important; padding: 8px 30px 8px 11px !important; }
-                    #view-admin .admin-tab::after { font-size: 0.62rem !important; }
-                    #form-admin-article .fe-admin-layout { display: flex !important; flex-direction: column !important; gap: 14px !important; }
-                    #form-admin-article .fe-admin-main, #form-admin-article .fe-admin-sidebar { width: 100% !important; }
-                    #form-admin-article .fe-admin-sidebar { position: static !important; }
-                    #tab-collaborators:not(.hidden) { grid-template-columns: 1fr !important; grid-template-areas: "settings" "add" "pending" "people" !important; }
-                    #admin-article-content { min-height: 440px !important; }
-                }
-                @media (max-width: 600px) {
-                    #view-admin:not(.hidden) { padding: 10px 8px 50px !important; }
-                    #view-admin .admin-top-bar { min-height: 0 !important; padding: 17px !important; gap: 12px !important; align-items: flex-start !important; border-radius: 15px !important; }
-                    #view-admin .admin-top-bar .catalog-title { font-size: 1.12rem !important; }
-                    #view-admin .admin-top-bar .catalog-subtitle { font-size: 0.73rem !important; }
-                    #view-admin #btn-close-admin { padding: 7px 9px !important; font-size: 0.7rem !important; }
-                    .fe-panel-meta { margin-top: 9px !important; }
-                    #view-admin .admin-tab { min-width: 132px !important; }
-                    #form-admin-article .fe-admin-card, #view-admin > .admin-tab-content > .admin-card, #tab-collaborators:not(.hidden) > .admin-card { padding: 15px !important; border-radius: 14px !important; }
-                    #admin-article-title { font-size: 1.35rem !important; }
-                    #admin-article-content { min-height: 390px !important; padding: 15px !important; font-size: 1rem !important; }
-                    .fe-cat-pills { grid-template-columns: 1fr !important; }
-                    #form-admin-article .admin-form-actions { grid-template-columns: 1fr !important; }
-                    #btn-save-article, #btn-reset-article-form { width: 100% !important; }
-                    #view-admin .admin-list-row { grid-template-columns: 1fr !important; }
-                }
-            `;
-            var styleAdm = document.createElement("style");
-            styleAdm.id = "fe-pro-admin-styles";
-            styleAdm.appendChild(document.createTextNode(admCss));
-            document.head.appendChild(styleAdm);
-        }
     }
 
     function addCardClass(el) { if(el) el.classList.add("fe-admin-card"); }
@@ -953,6 +673,215 @@
         window.feProfessionalRoleSyncReady = true;
     }
 
+
+    /* ==========================================================================
+       7. DASHBOARD CMS PROFESSIONALE — MENU, SOTTOMENU E WORKSPACE
+       ========================================================================== */
+
+    function feIconSvg(name) {
+        var icons = {
+            pen: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+            archive: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M5 6v14h14V6"/><path d="M8 10h8"/><path d="M9 14h6"/></svg>',
+            team: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>',
+            shield: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/><path d="m9 12 2 2 4-4"/></svg>',
+            users: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-4-4h-1"/></svg>',
+            back: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h12"/></svg>',
+            menu: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>'
+        };
+        return icons[name] || icons.archive;
+    }
+
+    function decorateCmsNavButton(button, iconName, title, caption) {
+        if (!button) return;
+        var badge = button.querySelector('.badge-alert');
+        if (badge) badge.remove();
+        button.innerHTML =
+            '<span class="fe-nav-icon">' + feIconSvg(iconName) + '</span>' +
+            '<span class="fe-nav-copy"><strong>' + title + '</strong><small>' + caption + '</small></span>';
+        if (badge) button.appendChild(badge);
+    }
+
+    function updateCmsNavGroups() {
+        var nav = document.querySelector('#view-admin .admin-tabs');
+        if (!nav) return;
+        nav.querySelectorAll('.fe-nav-group').forEach(function (group) {
+            var visible = Array.prototype.some.call(group.querySelectorAll('.admin-tab'), function (button) {
+                return !button.classList.contains('hidden');
+            });
+            group.classList.toggle('hidden', !visible);
+        });
+
+        var isAdminRole = typeof state !== 'undefined' && state.isAdmin === true;
+        var brandMode = document.getElementById('fe-nav-brand-mode');
+        if (brandMode) brandMode.textContent = isAdminRole ? 'Editorial CMS' : 'Writer Studio';
+
+        decorateCmsNavButton(document.querySelector('[data-tab="tab-editor"]'), 'pen', 'Scrivi articolo', 'Crea o modifica contenuti');
+        decorateCmsNavButton(document.querySelector('[data-tab="tab-manage-articles"]'), 'archive', isAdminRole ? 'Archivio articoli' : 'I miei articoli', isAdminRole ? 'Gestisci tutti i contenuti' : 'Controlla i tuoi contenuti');
+        decorateCmsNavButton(document.querySelector('[data-tab="tab-collaborators"]'), 'team', 'Collaboratori', 'Team, permessi e approvazioni');
+        decorateCmsNavButton(document.querySelector('[data-tab="tab-moderation"]'), 'shield', 'Moderazione', 'Commenti e segnalazioni');
+        decorateCmsNavButton(document.querySelector('[data-tab="tab-users"]'), 'users', 'Utenti', 'Account registrati');
+    }
+
+    function updateCmsWorkspaceHeader() {
+        var view = document.getElementById('view-admin');
+        if (!view) return;
+        var active = view.querySelector('.admin-tab.active');
+        var key = active ? active.getAttribute('data-tab') : 'tab-editor';
+        var title = document.getElementById('admin-panel-title');
+        var subtitle = document.getElementById('admin-panel-subtitle');
+        var isAdminRole = typeof state !== 'undefined' && state.isAdmin === true;
+        var copy = {
+            'tab-editor': [isAdminRole ? 'Scrivi un articolo' : 'Scrivi il tuo articolo', isAdminRole ? 'Crea un nuovo contenuto o modifica un articolo esistente.' : 'Prepara il contenuto e invialo alla redazione quando è pronto.'],
+            'tab-manage-articles': [isAdminRole ? 'Archivio articoli' : 'I miei articoli', isAdminRole ? 'Controlla stato, modifiche e pubblicazione di tutti gli articoli.' : 'Controlla lo stato dei tuoi articoli e riaprili per modificarli.'],
+            'tab-collaborators': ['Gestione collaboratori', 'Approva gli articoli, gestisci il team e assegna i permessi editoriali.'],
+            'tab-moderation': ['Moderazione community', 'Controlla segnalazioni e commenti pubblicati sul sito.'],
+            'tab-users': ['Utenti registrati', 'Consulta gli account e gestisci eventuali blocchi.']
+        };
+        var selected = copy[key] || copy['tab-editor'];
+        if (title) title.textContent = selected[0];
+        if (subtitle) subtitle.textContent = selected[1];
+
+        var eyebrow = document.getElementById('fe-workspace-eyebrow');
+        if (!eyebrow) {
+            eyebrow = document.createElement('div');
+            eyebrow.id = 'fe-workspace-eyebrow';
+            eyebrow.className = 'fe-workspace-eyebrow';
+            var top = view.querySelector('.admin-top-bar > div:first-child');
+            if (top) top.insertBefore(eyebrow, top.firstChild);
+        }
+        if (eyebrow) eyebrow.textContent = isAdminRole ? 'FUORI ETICHETTA / AMMINISTRAZIONE' : 'FUORI ETICHETTA / AREA COLLABORATORE';
+    }
+
+    function showCollaboratorSubpanel(panelName) {
+        var root = document.getElementById('tab-collaborators');
+        if (!root) return;
+        var cards = root.querySelectorAll(':scope > .admin-card[data-fe-collab-panel]');
+        cards.forEach(function (card) {
+            card.classList.toggle('fe-subpanel-hidden', card.getAttribute('data-fe-collab-panel') !== panelName);
+        });
+        root.querySelectorAll('.fe-collab-subnav-btn').forEach(function (button) {
+            button.classList.toggle('active', button.getAttribute('data-fe-collab-target') === panelName);
+        });
+    }
+
+    function setupCollaboratorSubmenu() {
+        var root = document.getElementById('tab-collaborators');
+        if (!root || root.dataset.feSubmenuReady === 'true') return;
+        var cards = Array.prototype.slice.call(root.querySelectorAll(':scope > .admin-card'));
+        if (cards.length < 4) return;
+        cards[0].setAttribute('data-fe-collab-panel', 'settings');
+        cards[1].setAttribute('data-fe-collab-panel', 'add');
+        cards[2].setAttribute('data-fe-collab-panel', 'pending');
+        cards[3].setAttribute('data-fe-collab-panel', 'people');
+
+        var subnav = document.createElement('div');
+        subnav.className = 'fe-collab-subnav';
+        subnav.innerHTML =
+            '<button type="button" class="fe-collab-subnav-btn active" data-fe-collab-target="pending"><span>Da approvare</span><small>Revisioni in attesa</small></button>' +
+            '<button type="button" class="fe-collab-subnav-btn" data-fe-collab-target="people"><span>Collaboratori</span><small>Elenco e permessi</small></button>' +
+            '<button type="button" class="fe-collab-subnav-btn" data-fe-collab-target="add"><span>Aggiungi</span><small>Nuovo collaboratore</small></button>' +
+            '<button type="button" class="fe-collab-subnav-btn" data-fe-collab-target="settings"><span>Impostazioni</span><small>Regole di approvazione</small></button>';
+        root.insertBefore(subnav, root.firstChild);
+        subnav.addEventListener('click', function (event) {
+            var button = event.target.closest('.fe-collab-subnav-btn');
+            if (!button) return;
+            showCollaboratorSubpanel(button.getAttribute('data-fe-collab-target'));
+        });
+        root.dataset.feSubmenuReady = 'true';
+        showCollaboratorSubpanel('pending');
+    }
+
+    function closeCmsMobileNav() {
+        var view = document.getElementById('view-admin');
+        if (view) view.classList.remove('fe-mobile-nav-open');
+    }
+
+    function buildCmsNavigation() {
+        var view = document.getElementById('view-admin');
+        var nav = view ? view.querySelector('.admin-tabs') : null;
+        if (!view || !nav) return;
+
+        if (nav.dataset.feCmsReady !== 'true') {
+            nav.classList.add('fe-cms-sidebar');
+            var editor = nav.querySelector('[data-tab="tab-editor"]');
+            var archive = nav.querySelector('[data-tab="tab-manage-articles"]');
+            var collaborators = nav.querySelector('[data-tab="tab-collaborators"]');
+            var moderation = nav.querySelector('[data-tab="tab-moderation"]');
+            var users = nav.querySelector('[data-tab="tab-users"]');
+
+            var brand = document.createElement('div');
+            brand.className = 'fe-nav-brand';
+            brand.innerHTML = '<span class="fe-nav-brand-mark">FE</span><span><strong>Fuori Etichetta</strong><small id="fe-nav-brand-mode">Editorial CMS</small></span>';
+            nav.insertBefore(brand, nav.firstChild);
+
+            function makeGroup(label, buttons) {
+                var group = document.createElement('div');
+                group.className = 'fe-nav-group';
+                group.innerHTML = '<div class="fe-nav-group-title">' + label + '</div>';
+                buttons.forEach(function (button) { if (button) group.appendChild(button); });
+                nav.appendChild(group);
+                return group;
+            }
+            makeGroup('CONTENUTI', [editor, archive]);
+            makeGroup('TEAM EDITORIALE', [collaborators]);
+            makeGroup('COMMUNITY', [moderation, users]);
+
+            var closeButton = document.getElementById('btn-close-admin');
+            var footer = document.createElement('div');
+            footer.className = 'fe-nav-footer';
+            if (closeButton) {
+                closeButton.innerHTML = '<span class="fe-nav-footer-icon">' + feIconSvg('back') + '</span><span>Torna al sito</span>';
+                footer.appendChild(closeButton);
+            }
+            nav.appendChild(footer);
+
+            var mobileToggle = document.createElement('button');
+            mobileToggle.type = 'button';
+            mobileToggle.id = 'fe-mobile-nav-toggle';
+            mobileToggle.className = 'fe-mobile-nav-toggle';
+            mobileToggle.setAttribute('aria-label', 'Apri menu editoriale');
+            mobileToggle.innerHTML = feIconSvg('menu');
+            var topBar = view.querySelector('.admin-top-bar');
+            if (topBar) topBar.insertBefore(mobileToggle, topBar.firstChild);
+            mobileToggle.addEventListener('click', function () { view.classList.toggle('fe-mobile-nav-open'); });
+
+            var overlay = document.createElement('button');
+            overlay.type = 'button';
+            overlay.className = 'fe-mobile-nav-overlay';
+            overlay.setAttribute('aria-label', 'Chiudi menu');
+            overlay.addEventListener('click', closeCmsMobileNav);
+            view.appendChild(overlay);
+
+            nav.addEventListener('click', function (event) {
+                var tab = event.target.closest('.admin-tab');
+                if (!tab) return;
+                setTimeout(function () {
+                    updateCmsWorkspaceHeader();
+                    if (tab.getAttribute('data-tab') === 'tab-collaborators') showCollaboratorSubpanel('pending');
+                    closeCmsMobileNav();
+                }, 0);
+            });
+
+            nav.dataset.feCmsReady = 'true';
+        }
+
+        setupCollaboratorSubmenu();
+        updateCmsNavGroups();
+        updateCmsWorkspaceHeader();
+    }
+
+    function setupCmsRoleSync() {
+        if (window.feCmsRoleSyncReady) return;
+        window.addEventListener('fe-role-change', function () {
+            setTimeout(function () {
+                buildCmsNavigation();
+                updateCmsNavGroups();
+                updateCmsWorkspaceHeader();
+            }, 40);
+        });
+        window.feCmsRoleSyncReady = true;
+    }
+
     function upgradeAdminPanel() {
         var form = document.getElementById("form-admin-article");
         if (!form) return;
@@ -966,6 +895,8 @@
         improveAccessibility();
         upgradePanelIdentity();
         setupProfessionalRoleSync();
+        buildCmsNavigation();
+        setupCmsRoleSync();
     }
 
     function initAdminObserver() {
@@ -987,6 +918,8 @@
         injectStyles();
         fixCategories();
         upgradeAdminPanel();
+        buildCmsNavigation();
+        setupCmsRoleSync();
         
         initArticleObserver();
         initAdminObserver();
