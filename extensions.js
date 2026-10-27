@@ -617,12 +617,22 @@
         var button = document.getElementById("btn-save-article");
         if (!button) return;
         function updateButton() {
+            var collaborator = typeof state !== "undefined" && state.currentProfile && state.currentProfile.role === "collaborator" && state.currentProfile.collaborator_enabled === true;
+            if (collaborator) {
+                var direct = state.currentProfile.can_publish_without_approval === true || (state.settings && state.settings.require_collaborator_approval === false);
+                button.textContent = direct ? "Pubblica articolo" : "Invia per approvazione";
+                return;
+            }
             if (!checkbox) { button.textContent = "Salva articolo"; return; }
             button.textContent = checkbox.checked ? "Pubblica articolo" : "Salva bozza";
         }
         if (checkbox && checkbox.dataset.fePublishReady !== "true") {
             checkbox.addEventListener("change", updateButton);
             checkbox.dataset.fePublishReady = "true";
+        }
+        if (button.dataset.feRoleListener !== "true") {
+            window.addEventListener("fe-role-change", updateButton);
+            button.dataset.feRoleListener = "true";
         }
         updateButton();
     }
