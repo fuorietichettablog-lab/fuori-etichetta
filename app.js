@@ -19,6 +19,8 @@ const state = {
     currentUser: null,
     currentProfile: null,
     isAdmin: false,
+    isCollaborator: false,
+    settings: { require_collaborator_approval: true },
     articles: [],
     currentCategory: 'all',
     searchQuery: '',
@@ -80,6 +82,98 @@ function showToast(message) {
     setTimeout(() => {
         toast.remove();
     }, 3800);
+}
+
+
+function isActiveCollaborator() {
+    return Boolean(
+        state.currentUser &&
+        state.currentProfile &&
+        state.currentProfile.role === 'collaborator' &&
+        state.currentProfile.collaborator_enabled === true &&
+        !state.currentProfile.is_banned
+    );
+}
+
+function canAccessEditorialPanel() {
+    return state.isAdmin || isActiveCollaborator();
+}
+
+function collaboratorCanPublishDirectly() {
+    if (!isActiveCollaborator()) return false;
+    return state.currentProfile.can_publish_without_approval === true ||
+        state.settings.require_collaborator_approval === false;
+}
+
+function getArticleStatusLabel(article) {
+    if (article?.approval_status === 'pending') return '🟡 In attesa di approvazione';
+    if (article?.published) return '🟢 Pubblicato';
+    if (article?.approval_status === 'approved') return '⚪ Approvato ma non pubblicato';
+    return '🟠 Bozza';
+}
+
+async function loadEditorialSettings() {
+    state.settings = { require_collaborator_approval: true };
+    if (!state.currentUser) return;
+
+    const { data, error } = await supabaseClient
+        .from('editorial_settings')
+        .select('require_collaborator_approval')
+        .eq('id', 1)
+        .maybeSingle();
+
+    if (!error && data) {
+        state.settings.require_collaborator_approval = data.require_collaborator_approval !== false;
+    }
+}
+
+function applyEditorialPanelRoleUI() {
+    const btnOpenAdmin = document.getElementById('btn-open-admin');
+    const panelTitle = document.getElementById('admin-panel-title');
+    const panelSubtitle = document.getElementById('admin-panel-subtitle');
+    const publishControl = document.getElementById('admin-publish-control');
+    const collaboratorHint = document.getElementById('collaborator-submit-hint');
+    const saveButton = document.getElementById('btn-save-article');
+    const deleteCurrent = document.getElementById('btn-delete-current-article');
+    const manageArticlesTab = document.getElementById('tab-manage-articles-btn');
+
+    document.querySelectorAll('[data-admin-only="true"]').forEach((el) => {
+        el.classList.toggle('hidden', !state.isAdmin);
+    });
+
+    if (state.isAdmin) {
+        if (btnOpenAdmin) btnOpenAdmin.querySelector('span:first-child').textContent = 'Admin';
+        if (panelTitle) panelTitle.textContent = 'Pannello di Controllo Admin';
+        if (panelSubtitle) panelSubtitle.textContent = 'Pubblica articoli, gestisci collaboratori e modera la community.';
+        if (publishControl) publishControl.classList.remove('hidden');
+        if (collaboratorHint) collaboratorHint.classList.add('hidden');
+        if (deleteCurrent) deleteCurrent.classList.remove('hidden');
+        if (manageArticlesTab) manageArticlesTab.textContent = 'Tutti gli Articoli';
+    } else if (isActiveCollaborator()) {
+        if (btnOpenAdmin) btnOpenAdmin.querySelector('span:first-child').textContent = 'Area Collaboratore';
+        if (panelTitle) panelTitle.textContent = 'Area Collaboratore';
+        if (panelSubtitle) panelSubtitle.textContent = 'Scrivi e modifica i tuoi articoli. Non puoi eliminare articoli.';
+        if (publishControl) publishControl.classList.add('hidden');
+        if (collaboratorHint) {
+            collaboratorHint.classList.remove('hidden');
+            collaboratorHint.innerHTML = collaboratorCanPublishDirectly()
+                ? '<strong>Pubblicazione diretta abilitata.</strong> Quando salvi, il tuo articolo viene pubblicato online.'
+                : '<strong>Approvazione richiesta.</strong> Quando salvi, l\'articolo viene inviato all\'admin e resta offline finché non viene approvato.';
+        }
+        if (saveButton) saveButton.textContent = collaboratorCanPublishDirectly() ? 'Pubblica articolo' : 'Invia per approvazione';
+        if (deleteCurrent) deleteCurrent.classList.add('hidden');
+        if (manageArticlesTab) manageArticlesTab.textContent = 'I miei Articoli';
+
+        const activeAdminOnlyContent = document.querySelector('.admin-tab-content[data-admin-only="true"]:not(.hidden)');
+        if (activeAdminOnlyContent) {
+            document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-content').forEach((c) => c.classList.add('hidden'));
+            document.querySelector('[data-tab="tab-editor"]')?.classList.add('active');
+            document.getElementById('tab-editor')?.classList.remove('hidden');
+        }
+    }
+
+    window.dispatchEvent(new CustomEvent('fe-role-change'));
 }
 
 function isAtLeast16YearsOld(birthDateString) {
@@ -232,7 +326,9 @@ async function uploadMediaToSupabase(file, folder = 'articles') {
     }
 
     const compressedBlob = await compressImageFile(file, folder === 'avatars' ? 400 : 1400);
-    const fileName = `${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
+    const ownerFolder = state.currentUser?.id;
+    if (!ownerFolder) throw new Error('Devi essere autenticato per caricare file.');
+    const fileName = `${ownerFolder}/${folder}/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.webp`;
 
     const { error } = await supabaseClient.storage
         .from('media')
@@ -255,7 +351,9 @@ async function uploadVideoToSupabase(file) {
     }
 
     const ext = file.name.split('.').pop().toLowerCase() || 'mp4';
-    const fileName = `videos/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
+    const ownerFolder = state.currentUser?.id;
+    if (!ownerFolder) throw new Error('Devi essere autenticato per caricare video.');
+    const fileName = `${ownerFolder}/videos/${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`;
 
     const { error } = await supabaseClient.storage
         .from('media')
@@ -629,6 +727,8 @@ async function refreshUserSession(user) {
     state.currentUser = user;
     state.currentProfile = null;
     state.isAdmin = false;
+    state.isCollaborator = false;
+    state.settings = { require_collaborator_approval: true };
 
     const btnOpenAuth = document.getElementById('btn-open-auth');
     const btnOpenProfile = document.getElementById('btn-open-profile');
@@ -665,24 +765,28 @@ async function refreshUserSession(user) {
 
         state.currentProfile = profile;
         state.isAdmin = profile.role === 'admin';
+        state.isCollaborator = profile.role === 'collaborator' && profile.collaborator_enabled === true;
+        await loadEditorialSettings();
 
         btnOpenAuth.classList.add('hidden');
         btnOpenProfile.classList.remove('hidden');
         document.getElementById('header-user-name').textContent = profile.first_name;
         document.getElementById('header-user-avatar').src = profile.avatar_url || getDefaultAvatar(profile.first_name);
 
-        if (state.isAdmin) {
+        if (canAccessEditorialPanel()) {
             btnOpenAdmin.classList.remove('hidden');
-            refreshAdminReportBadge();
+            if (state.isAdmin) refreshAdminReportBadge();
         } else {
             btnOpenAdmin.classList.add('hidden');
         }
 
+        applyEditorialPanelRoleUI();
         updateCommentBoxVisibility();
     } catch (err) {
         console.error('Errore caricamento profilo utente:', err);
         btnOpenAuth.classList.remove('hidden');
         btnOpenProfile.classList.add('hidden');
+        btnOpenAdmin.classList.add('hidden');
     }
 }
 
@@ -823,8 +927,16 @@ async function openArticleDetail(articleId) {
     document.getElementById('article-detail-content').textContent = article.content;
 
     const adminQuick = document.getElementById('article-admin-actions');
-    if (state.isAdmin) adminQuick.classList.remove('hidden');
-    else adminQuick.classList.add('hidden');
+    const editCurrentBtn = document.getElementById('btn-edit-current-article');
+    const deleteCurrentBtn = document.getElementById('btn-delete-current-article');
+    const collaboratorOwnsArticle = isActiveCollaborator() && article.author_id === state.currentUser?.id;
+    if (state.isAdmin || collaboratorOwnsArticle) {
+        adminQuick.classList.remove('hidden');
+        editCurrentBtn.classList.remove('hidden');
+        deleteCurrentBtn.classList.toggle('hidden', !state.isAdmin);
+    } else {
+        adminQuick.classList.add('hidden');
+    }
 
     // Estrae Cerchietti, Foto Extra e Video
     const { pins, gallery, videoUrl } = parseArticleMedia(article);
@@ -1396,16 +1508,26 @@ function renderEditorExtraMediaPreview() {
 }
 
 async function loadAdminAllArticles() {
+    if (!canAccessEditorialPanel()) return;
     const container = document.getElementById('admin-articles-table');
-    const { data, error } = await supabaseClient
+    let query = supabaseClient
         .from('articles')
         .select('*')
         .order('created_at', { ascending: false });
 
-    if (error) return;
+    if (!state.isAdmin) {
+        query = query.eq('author_id', state.currentUser.id);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+        container.innerHTML = `<p class="field-help">Impossibile caricare gli articoli: ${escapeHTML(error.message)}</p>`;
+        return;
+    }
 
     if (!data || data.length === 0) {
-        container.innerHTML = `<p class="field-help">Nessun articolo presente.</p>`;
+        container.innerHTML = `<p class="field-help">${state.isAdmin ? 'Nessun articolo presente.' : 'Non hai ancora scritto articoli.'}</p>`;
         return;
     }
 
@@ -1417,13 +1539,13 @@ async function loadAdminAllArticles() {
                     <strong>${escapeHTML(art.title)}</strong>
                     <div style="font-size:0.78rem; color:var(--text-secondary);">
                         ${escapeHTML(art.category)} • ${formatDate(art.created_at)} •
-                        ${art.published ? '🟢 Pubblicato' : '🟠 Bozza'} •
+                        ${getArticleStatusLabel(art)} •
                         ${pins.length} cerchietti • ${1 + gallery.length} foto ${videoUrl ? '• 🎬 Video' : ''}
                     </div>
                 </div>
-                <div style="display:flex; gap:8px;">
+                <div style="display:flex; gap:8px; flex-wrap:wrap;">
                     <button class="btn-secondary btn-sm" data-edit-art="${escapeHTML(art.id)}">Modifica</button>
-                    <button class="btn-danger btn-sm" data-del-art="${escapeHTML(art.id)}">Elimina</button>
+                    ${state.isAdmin ? `<button class="btn-danger btn-sm" data-del-art="${escapeHTML(art.id)}">Elimina</button>` : ''}
                 </div>
             </div>
         `;
@@ -1436,19 +1558,31 @@ async function loadAdminAllArticles() {
         });
     });
 
-    container.querySelectorAll('[data-del-art]').forEach((btn) => {
-        btn.addEventListener('click', async () => {
-            const id = btn.getAttribute('data-del-art');
-            if (!confirm('Eliminare definitivamente questo articolo?')) return;
-            await supabaseClient.from('articles').delete().eq('id', id);
-            showToast('Articolo eliminato.');
-            await loadAdminAllArticles();
-            await loadCatalogArticles();
+    if (state.isAdmin) {
+        container.querySelectorAll('[data-del-art]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-del-art');
+                if (!confirm('Eliminare definitivamente questo articolo?')) return;
+                const { error: deleteError } = await supabaseClient.from('articles').delete().eq('id', id);
+                if (deleteError) {
+                    showToast(`Errore eliminazione: ${deleteError.message}`);
+                    return;
+                }
+                showToast('Articolo eliminato.');
+                await loadAdminAllArticles();
+                await loadCatalogArticles();
+                await loadAdminCollaboratorsData();
+            });
         });
-    });
+    }
 }
 
 function populateAdminEditorForEdit(article) {
+    if (!state.isAdmin && (!isActiveCollaborator() || article.author_id !== state.currentUser?.id)) {
+        showToast('Non puoi modificare questo articolo.');
+        return;
+    }
+
     document.querySelectorAll('.admin-tab').forEach((t) => t.classList.remove('active'));
     document.querySelectorAll('.admin-tab-content').forEach((c) => c.classList.add('hidden'));
     document.querySelector('[data-tab="tab-editor"]').classList.add('active');
@@ -1473,6 +1607,7 @@ function populateAdminEditorForEdit(article) {
 
     renderEditorHotspotsPreview();
     renderEditorExtraMediaPreview();
+    applyEditorialPanelRoleUI();
 }
 
 async function refreshAdminReportBadge() {
@@ -1605,6 +1740,173 @@ async function loadAdminUsersData() {
     });
 }
 
+
+async function loadAdminCollaboratorsData() {
+    if (!state.isAdmin) return;
+
+    await loadEditorialSettings();
+
+    const approvalToggle = document.getElementById('admin-require-approval-toggle');
+    const approvalText = document.getElementById('admin-require-approval-status');
+    if (approvalToggle) approvalToggle.checked = state.settings.require_collaborator_approval;
+    if (approvalText) {
+        approvalText.textContent = state.settings.require_collaborator_approval
+            ? 'ON — i collaboratori devono essere approvati, salvo permesso individuale.'
+            : 'OFF — tutti i collaboratori attivi possono pubblicare direttamente.';
+    }
+
+    const [{ data: profiles, error: profilesError }, { data: articles, error: articlesError }] = await Promise.all([
+        supabaseClient.from('profiles').select('*').order('created_at', { ascending: false }),
+        supabaseClient.from('articles').select('*').order('created_at', { ascending: false })
+    ]);
+
+    if (profilesError || articlesError) {
+        showToast('Errore nel caricamento dei collaboratori.');
+        return;
+    }
+
+    const allProfiles = profiles || [];
+    const allArticles = articles || [];
+    const collaborators = allProfiles.filter((p) => p.role === 'collaborator');
+    const candidates = allProfiles.filter((p) => p.role === 'user' && !p.is_banned);
+    const pending = allArticles.filter((a) => a.approval_status === 'pending');
+
+    const badge = document.getElementById('tab-pending-count');
+    if (badge) {
+        if (pending.length > 0) {
+            badge.textContent = pending.length;
+            badge.classList.remove('hidden');
+        } else {
+            badge.classList.add('hidden');
+        }
+    }
+
+    const select = document.getElementById('admin-promote-user-select');
+    if (select) {
+        select.innerHTML = '<option value="">Seleziona un utente...</option>' + candidates.map((u) =>
+            `<option value="${escapeHTML(u.id)}">${escapeHTML(u.first_name)} ${escapeHTML(u.last_name)} — ${escapeHTML(u.email)}</option>`
+        ).join('');
+    }
+
+    const pendingBox = document.getElementById('admin-pending-articles-list');
+    if (pendingBox) {
+        pendingBox.innerHTML = pending.length === 0
+            ? '<p class="field-help">Nessun articolo in attesa di approvazione.</p>'
+            : pending.map((art) => {
+                const author = allProfiles.find((p) => p.id === art.author_id);
+                return `
+                    <div class="admin-list-row">
+                        <div>
+                            <strong>${escapeHTML(art.title)}</strong>
+                            <div style="font-size:0.78rem; color:var(--text-secondary);">
+                                di ${escapeHTML(author ? `${author.first_name} ${author.last_name}` : 'Collaboratore')} • ${formatDate(art.created_at)} • 🟡 In attesa
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <button class="btn-secondary btn-sm" data-review-edit="${escapeHTML(art.id)}">Modifica</button>
+                            <button class="btn-primary btn-sm" data-approve-art="${escapeHTML(art.id)}">Approva e pubblica</button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+        pendingBox.querySelectorAll('[data-review-edit]').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const art = allArticles.find((a) => a.id === btn.getAttribute('data-review-edit'));
+                if (art) populateAdminEditorForEdit(art);
+            });
+        });
+
+        pendingBox.querySelectorAll('[data-approve-art]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const id = btn.getAttribute('data-approve-art');
+                const { error } = await supabaseClient
+                    .from('articles')
+                    .update({ published: true, approval_status: 'approved', updated_at: new Date().toISOString() })
+                    .eq('id', id);
+                if (error) {
+                    showToast(`Errore approvazione: ${error.message}`);
+                    return;
+                }
+                showToast('Articolo approvato e pubblicato!');
+                await loadCatalogArticles();
+                await loadAdminAllArticles();
+                await loadAdminCollaboratorsData();
+            });
+        });
+    }
+
+    const collabBox = document.getElementById('admin-collaborators-list');
+    if (collabBox) {
+        collabBox.innerHTML = collaborators.length === 0
+            ? '<p class="field-help">Non hai ancora collaboratori.</p>'
+            : collaborators.map((u) => {
+                const authored = allArticles.filter((a) => a.author_id === u.id);
+                const articleLines = authored.length
+                    ? authored.map((a) => `<div style="margin-top:4px;">• ${escapeHTML(a.title)} — ${getArticleStatusLabel(a)}</div>`).join('')
+                    : '<div style="margin-top:4px;">Nessun articolo scritto.</div>';
+                return `
+                    <div class="admin-list-row" style="align-items:flex-start;">
+                        <div style="min-width:0; flex:1;">
+                            <strong>${escapeHTML(u.first_name)} ${escapeHTML(u.last_name)}</strong>
+                            <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:3px;">
+                                ${escapeHTML(u.email)} • ${u.collaborator_enabled ? '🟢 Attivo' : '🔴 Disabilitato'} •
+                                ${u.can_publish_without_approval ? 'Pubblicazione diretta: SÌ' : 'Pubblicazione diretta: NO'} •
+                                ${authored.length} ${authored.length === 1 ? 'articolo' : 'articoli'}
+                            </div>
+                            <div style="font-size:0.78rem; color:var(--text-secondary); margin-top:8px;">${articleLines}</div>
+                        </div>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                            <button class="${u.collaborator_enabled ? 'btn-danger' : 'btn-secondary'} btn-sm" data-toggle-collab-enabled="${escapeHTML(u.id)}" data-enabled="${u.collaborator_enabled}">
+                                ${u.collaborator_enabled ? 'Disabilita' : 'Riabilita'}
+                            </button>
+                            <button class="btn-secondary btn-sm" data-toggle-direct-publish="${escapeHTML(u.id)}" data-direct="${u.can_publish_without_approval}">
+                                ${u.can_publish_without_approval ? 'Revoca pubblicazione diretta' : 'Consenti pubblicazione diretta'}
+                            </button>
+                            <button class="btn-secondary btn-sm" data-remove-collaborator="${escapeHTML(u.id)}">Rimuovi ruolo</button>
+                        </div>
+                    </div>`;
+            }).join('');
+
+        collabBox.querySelectorAll('[data-toggle-collab-enabled]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const uid = btn.getAttribute('data-toggle-collab-enabled');
+                const enabled = btn.getAttribute('data-enabled') === 'true';
+                const { error } = await supabaseClient.from('profiles').update({ collaborator_enabled: !enabled }).eq('id', uid);
+                if (error) return showToast(`Errore: ${error.message}`);
+                showToast(!enabled ? 'Collaboratore riabilitato.' : 'Collaboratore disabilitato.');
+                await loadAdminCollaboratorsData();
+            });
+        });
+
+        collabBox.querySelectorAll('[data-toggle-direct-publish]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                const uid = btn.getAttribute('data-toggle-direct-publish');
+                const direct = btn.getAttribute('data-direct') === 'true';
+                const { error } = await supabaseClient.from('profiles').update({ can_publish_without_approval: !direct }).eq('id', uid);
+                if (error) return showToast(`Errore: ${error.message}`);
+                showToast(!direct ? 'Pubblicazione diretta concessa.' : 'Pubblicazione diretta revocata.');
+                await loadAdminCollaboratorsData();
+            });
+        });
+
+        collabBox.querySelectorAll('[data-remove-collaborator]').forEach((btn) => {
+            btn.addEventListener('click', async () => {
+                if (!confirm('Rimuovere il ruolo di collaboratore? Gli articoli già scritti resteranno nel sito.')) return;
+                const uid = btn.getAttribute('data-remove-collaborator');
+                const { error } = await supabaseClient.from('profiles').update({
+                    role: 'user',
+                    collaborator_enabled: false,
+                    can_publish_without_approval: false
+                }).eq('id', uid);
+                if (error) return showToast(`Errore: ${error.message}`);
+                showToast('Ruolo collaboratore rimosso.');
+                await loadAdminCollaboratorsData();
+                await loadAdminUsersData();
+            });
+        });
+    }
+}
+
 // ============================================================================
 // COLLEGAMENTO EVENTI INTERFACCIA (DOM LISTENERS)
 // ============================================================================
@@ -1694,13 +1996,21 @@ function bindUIEvents() {
 
     document.getElementById('btn-edit-current-article').addEventListener('click', () => {
         if (!state.activeArticle) return;
+        const allowed = state.isAdmin || (isActiveCollaborator() && state.activeArticle.author_id === state.currentUser?.id);
+        if (!allowed) return;
         switchMainView('view-admin');
+        applyEditorialPanelRoleUI();
         populateAdminEditorForEdit(state.activeArticle);
     });
 
     document.getElementById('btn-delete-current-article').addEventListener('click', async () => {
+        if (!state.isAdmin) {
+            showToast('Solo l\'admin può eliminare articoli.');
+            return;
+        }
         if (!state.activeArticle || !confirm('Vuoi davvero eliminare questo articolo?')) return;
-        await supabaseClient.from('articles').delete().eq('id', state.activeArticle.id);
+        const { error } = await supabaseClient.from('articles').delete().eq('id', state.activeArticle.id);
+        if (error) return showToast(`Errore eliminazione: ${error.message}`);
         showToast('Articolo eliminato.');
         await loadCatalogArticles();
         switchMainView('view-home');
@@ -1878,11 +2188,15 @@ function bindUIEvents() {
     // EVENTI PANNELLO ADMIN: FOTO PRINCIPALE, FOTO EXTRA, VIDEO E CERCHIETTI
     // ========================================================================
     document.getElementById('btn-open-admin').addEventListener('click', async () => {
-        if (!state.isAdmin) return;
+        if (!canAccessEditorialPanel()) return;
+        applyEditorialPanelRoleUI();
         switchMainView('view-admin');
         await loadAdminAllArticles();
-        await loadAdminModerationData();
-        await loadAdminUsersData();
+        if (state.isAdmin) {
+            await loadAdminModerationData();
+            await loadAdminUsersData();
+            await loadAdminCollaboratorsData();
+        }
     });
 
     document.getElementById('btn-close-admin').addEventListener('click', () => switchMainView('view-home'));
@@ -1895,6 +2209,49 @@ function bindUIEvents() {
             document.getElementById(tab.getAttribute('data-tab')).classList.remove('hidden');
         });
     });
+
+    const approvalToggle = document.getElementById('admin-require-approval-toggle');
+    if (approvalToggle) {
+        approvalToggle.addEventListener('change', async () => {
+            if (!state.isAdmin) return;
+            const value = approvalToggle.checked;
+            const { error } = await supabaseClient
+                .from('editorial_settings')
+                .update({
+                    require_collaborator_approval: value,
+                    updated_at: new Date().toISOString(),
+                    updated_by: state.currentUser.id
+                })
+                .eq('id', 1);
+            if (error) {
+                approvalToggle.checked = !value;
+                showToast(`Errore impostazione: ${error.message}`);
+                return;
+            }
+            await loadEditorialSettings();
+            showToast(value ? 'Approvazione collaboratori attivata.' : 'Approvazione collaboratori disattivata.');
+            await loadAdminCollaboratorsData();
+        });
+    }
+
+    const promoteButton = document.getElementById('btn-promote-collaborator');
+    if (promoteButton) {
+        promoteButton.addEventListener('click', async () => {
+            if (!state.isAdmin) return;
+            const select = document.getElementById('admin-promote-user-select');
+            const uid = select?.value;
+            if (!uid) return showToast('Seleziona prima un utente.');
+            const { error } = await supabaseClient.from('profiles').update({
+                role: 'collaborator',
+                collaborator_enabled: true,
+                can_publish_without_approval: false
+            }).eq('id', uid);
+            if (error) return showToast(`Errore: ${error.message}`);
+            showToast('Utente trasformato in collaboratore.');
+            await loadAdminCollaboratorsData();
+            await loadAdminUsersData();
+        });
+    }
 
     // Foto principale di copertina
     document.getElementById('admin-image-file').addEventListener('change', async (e) => {
@@ -2034,12 +2391,13 @@ function bindUIEvents() {
         document.getElementById('admin-hotspot-workspace').classList.add('hidden');
         renderEditorHotspotsPreview();
         renderEditorExtraMediaPreview();
+        applyEditorialPanelRoleUI();
     });
 
     // Salvataggio / Pubblicazione Articolo (Create / Update)
     document.getElementById('form-admin-article').addEventListener('submit', async (e) => {
         e.preventDefault();
-        if (!state.isAdmin) return;
+        if (!canAccessEditorialPanel()) return;
 
         const existingId = document.getElementById('admin-article-id').value;
         const title = document.getElementById('admin-article-title').value.trim();
@@ -2047,14 +2405,25 @@ function bindUIEvents() {
         const excerpt = document.getElementById('admin-article-excerpt').value.trim();
         const coverImage = document.getElementById('admin-image-url').value.trim();
         const content = document.getElementById('admin-article-content').value.trim();
-        const published = document.getElementById('admin-article-published').checked;
+        const adminPublished = document.getElementById('admin-article-published').checked;
 
         if (!coverImage) {
             showToast('Carica una foto principale o inserisci l\'URL dell\'immagine di copertina.');
             return;
         }
 
-        // Unisce Cerchietti + Foto Extra + Video nel campo JSON `hotspots`
+        if (existingId && !state.isAdmin) {
+            const { data: existingArticle, error: ownerCheckError } = await supabaseClient
+                .from('articles')
+                .select('id, author_id')
+                .eq('id', existingId)
+                .single();
+            if (ownerCheckError || existingArticle?.author_id !== state.currentUser.id) {
+                showToast('Non puoi modificare questo articolo.');
+                return;
+            }
+        }
+
         const combinedMediaPayload = packArticleMedia(
             state.editorHotspots,
             state.editorGallery,
@@ -2068,16 +2437,23 @@ function bindUIEvents() {
             cover_image: coverImage,
             content,
             hotspots: combinedMediaPayload,
-            published,
-            author_id: state.currentUser.id,
             updated_at: new Date().toISOString()
         };
+
+        if (state.isAdmin) {
+            payload.published = adminPublished;
+            payload.approval_status = adminPublished ? 'approved' : 'draft';
+        } else {
+            payload.published = collaboratorCanPublishDirectly();
+            payload.approval_status = collaboratorCanPublishDirectly() ? 'approved' : 'pending';
+        }
 
         let error;
         if (existingId) {
             ({ error } = await supabaseClient.from('articles').update(payload).eq('id', existingId));
         } else {
             payload.slug = generateSlug(title);
+            payload.author_id = state.currentUser.id;
             ({ error } = await supabaseClient.from('articles').insert(payload));
         }
 
@@ -2086,9 +2462,17 @@ function bindUIEvents() {
             return;
         }
 
-        showToast(existingId ? 'Articolo aggiornato!' : 'Articolo pubblicato con successo!');
+        if (state.isAdmin) {
+            showToast(existingId ? 'Articolo aggiornato!' : (adminPublished ? 'Articolo pubblicato con successo!' : 'Bozza salvata!'));
+        } else if (collaboratorCanPublishDirectly()) {
+            showToast(existingId ? 'Articolo aggiornato e pubblicato!' : 'Articolo pubblicato!');
+        } else {
+            showToast(existingId ? 'Modifiche inviate per approvazione!' : 'Articolo inviato per approvazione!');
+        }
+
         document.getElementById('btn-reset-article-form').click();
         await loadCatalogArticles();
         await loadAdminAllArticles();
+        if (state.isAdmin) await loadAdminCollaboratorsData();
     });
 }
