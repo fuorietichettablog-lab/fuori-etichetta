@@ -1,6 +1,6 @@
 /* ==========================================================================
    FUORI ETICHETTA - EXTENSIONS, STUDIO ADMIN PRO & ISPAZIO LAYOUT
-   (Safe Mode: Anti-Loop Infinito + Edit Commenti Integrato)
+   (Safe Mode: Anti-Loop Infinito + Edit Commenti Integrato e Corretto)
    ========================================================================== */
 
 (function () {
@@ -63,7 +63,6 @@
                 badge.className = "fe-public-reading-time";
                 header.appendChild(badge);
             }
-            // Controllo anti-loop: aggiorna solo se il testo è effettivamente cambiato
             if (badge.textContent !== newText) {
                 badge.textContent = newText;
             }
@@ -192,8 +191,6 @@
             killCarouselAndDistributePhotos();
         }
 
-        // Questo Observer scollega se stesso prima di fare le modifiche e si riattacca dopo.
-        // Impedisce totalmente i loop infiniti e i blocchi del sito.
         var obs = new MutationObserver(function () {
             obs.disconnect(); 
             runEnhancements();
@@ -205,7 +202,7 @@
 
 
     /* ==========================================================================
-       4. MODIFICA DEI PROPRI COMMENTI
+       4. MODIFICA DEI PROPRI COMMENTI (CORRETTO)
        ========================================================================== */
 
     function initCommentsEditor() {
@@ -276,11 +273,14 @@
                 btnSave.textContent = "Salvataggio...";
                 btnSave.disabled = true;
 
-                if (window.supabaseClient) {
-                    window.supabaseClient.from('comments').update({ content: newText }).eq('id', cId)
+                // CORREZIONE COLLEGAMENTO DATABASE SUPABASE
+                var dbClient = typeof supabaseClient !== "undefined" ? supabaseClient : null;
+                
+                if (dbClient) {
+                    dbClient.from('comments').update({ content: newText }).eq('id', cId)
                         .then(function(res) {
                             if (res.error) {
-                                alert("Errore durante la modifica.");
+                                alert("Errore durante la modifica: " + res.error.message);
                                 btnSave.textContent = "Salva Modifiche";
                                 btnSave.disabled = false;
                             } else {
@@ -290,6 +290,10 @@
                                 actionsContainerS.style.display = "";
                             }
                         });
+                } else {
+                    alert("Errore di rete: impossibile raggiungere il database.");
+                    btnSave.textContent = "Salva Modifiche";
+                    btnSave.disabled = false;
                 }
             }
         });
