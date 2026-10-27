@@ -184,20 +184,24 @@
         <section id="view-admin" class="view-section hidden">
             <div class="admin-top-bar">
                 <div>
-                    <h1 class="catalog-title">Pannello di Controllo Admin</h1>
-                    <p class="catalog-subtitle">Pubblica articoli, posiziona i cerchietti sui vestiti e modera la community.</p>
+                    <h1 id="admin-panel-title" class="catalog-title">Pannello di Controllo Admin</h1>
+                    <p id="admin-panel-subtitle" class="catalog-subtitle">Pubblica articoli, gestisci collaboratori e modera la community.</p>
                 </div>
                 <button id="btn-close-admin" class="btn-secondary">Torna al Sito</button>
             </div>
 
             <div class="admin-tabs">
                 <button class="admin-tab active" data-tab="tab-editor">Nuovo / Modifica Articolo</button>
-                <button class="admin-tab" data-tab="tab-manage-articles">Tutti gli Articoli</button>
-                <button class="admin-tab" data-tab="tab-moderation">
+                <button id="tab-manage-articles-btn" class="admin-tab" data-tab="tab-manage-articles">Tutti gli Articoli</button>
+                <button class="admin-tab" data-tab="tab-collaborators" data-admin-only="true">
+                    Collaboratori
+                    <span id="tab-pending-count" class="badge-alert hidden">0</span>
+                </button>
+                <button class="admin-tab" data-tab="tab-moderation" data-admin-only="true">
                     Moderazione Commenti
                     <span id="tab-report-count" class="badge-alert hidden">0</span>
                 </button>
-                <button class="admin-tab" data-tab="tab-users">Utenti Iscritti</button>
+                <button class="admin-tab" data-tab="tab-users" data-admin-only="true">Utenti Iscritti</button>
             </div>
 
             <!-- TAB 1: EDITOR ARTICOLO -->
@@ -258,10 +262,12 @@
                         <textarea id="admin-article-content" class="input-field" rows="10" placeholder="Scrivi qui il tuo articolo completo. Puoi andare a capo per separare i paragrafi..." required></textarea>
                     </div>
 
-                    <div class="form-group checkbox-group">
+                    <div id="admin-publish-control" class="form-group checkbox-group">
                         <input type="checkbox" id="admin-article-published" checked>
                         <label for="admin-article-published">Pubblica immediatamente (deseleziona per salvare come Bozza privata)</label>
                     </div>
+
+                    <div id="collaborator-submit-hint" class="admin-card hidden" style="padding:14px 16px; font-size:0.84rem; line-height:1.5;"></div>
 
                     <div class="admin-form-actions">
                         <button type="button" id="btn-reset-article-form" class="btn-secondary">Annulla / Pulisci</button>
@@ -278,8 +284,42 @@
                 </div>
             </div>
 
+            <!-- TAB 3: COLLABORATORI -->
+            <div id="tab-collaborators" class="admin-tab-content hidden" data-admin-only="true">
+                <div class="admin-card">
+                    <h3>Impostazioni Collaboratori</h3>
+                    <div class="form-group checkbox-group" style="margin-top:14px;">
+                        <input type="checkbox" id="admin-require-approval-toggle" checked>
+                        <label for="admin-require-approval-toggle">Richiedi approvazione prima della pubblicazione</label>
+                    </div>
+                    <p id="admin-require-approval-status" class="field-help"></p>
+                </div>
+
+                <div class="admin-card" style="margin-top:18px;">
+                    <h3>Aggiungi un Collaboratore</h3>
+                    <p class="field-help">Scegli un utente già registrato. Inizialmente dovrà passare dalla tua approvazione.</p>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+                        <select id="admin-promote-user-select" class="input-field" style="flex:1; min-width:240px;">
+                            <option value="">Seleziona un utente...</option>
+                        </select>
+                        <button type="button" id="btn-promote-collaborator" class="btn-primary">Rendi Collaboratore</button>
+                    </div>
+                </div>
+
+                <div class="admin-card" style="margin-top:18px;">
+                    <h3>Articoli in attesa di approvazione</h3>
+                    <div id="admin-pending-articles-list" class="admin-list-container"></div>
+                </div>
+
+                <div class="admin-card" style="margin-top:18px;">
+                    <h3>Collaboratori</h3>
+                    <p class="field-help">Qui puoi vedere cosa ha scritto ciascun collaboratore, disabilitarlo o concedergli la pubblicazione senza approvazione.</p>
+                    <div id="admin-collaborators-list" class="admin-list-container"></div>
+                </div>
+            </div>
+
             <!-- TAB 3: MODERAZIONE COMMENTI -->
-            <div id="tab-moderation" class="admin-tab-content hidden">
+            <div id="tab-moderation" class="admin-tab-content hidden" data-admin-only="true">
                 <div class="admin-card">
                     <h3>Commenti Segnalati dagli Utenti</h3>
                     <p class="field-help">Qui trovi in cima i commenti che hanno ricevuto segnalazioni dalla community. Puoi cancellare il commento o ignorare la segnalazione.</p>
@@ -291,8 +331,8 @@
                 </div>
             </div>
 
-            <!-- TAB 4: GESTIONE UTENTI -->
-            <div id="tab-users" class="admin-tab-content hidden">
+            <!-- TAB 5: GESTIONE UTENTI -->
+            <div id="tab-users" class="admin-tab-content hidden" data-admin-only="true">
                 <div class="admin-card">
                     <h3>Utenti Registrati</h3>
                     <p class="field-help">Visualizza gli iscritti verificati. Puoi bloccare (Ban) chi viola ripetutamente le regole.</p>
