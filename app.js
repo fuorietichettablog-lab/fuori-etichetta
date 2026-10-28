@@ -626,36 +626,59 @@ function injectMultiMediaUIAndStyles() {
         extraBox.id = 'admin-extra-media-controls';
         extraBox.className = 'fe-admin-extra-box';
         extraBox.innerHTML = `
-            <h4 style="margin:0 0 6px 0; font-size:0.95rem;">📸 Foto Aggiuntive & 🎬 Video dell'Articolo (Opzionale)</h4>
-            <p class="field-help" style="margin-bottom:12px;">
-                • Se la categoria è <strong>Outfit (Opzione A)</strong>: le foto extra e il video verranno mostrati in un <strong>Carosello sfogliabile</strong> insieme alla foto principale.<br>
-                • Se la categoria è <strong>Novità, Trend o Consigli (Opzione B)</strong>: compariranno in una sezione <strong>Galleria & Video</strong> sotto il testo dell'articolo.
-            </p>
+            <div class="fe-extra-media-head">
+                <div>
+                    <span class="fe-field-eyebrow">MEDIA SECONDARI</span>
+                    <h4>Foto e video dell'articolo</h4>
+                </div>
+                <span class="fe-field-status">Opzionale</span>
+            </div>
+            <p class="field-help fe-extra-media-intro">Aggiungi immagini che verranno distribuite nel testo e, se serve, un video. Puoi sempre rimuoverle prima della pubblicazione.</p>
 
-            <!-- Caricamento Foto Multiple -->
-            <div class="form-group" style="margin-bottom:14px;">
-                <label style="font-weight:600; font-size:0.85rem;">Aggiungi altre foto (puoi selezionarne anche più di una insieme):</label>
-                <div class="upload-controls" style="margin-top:6px;">
-                    <input type="file" id="admin-extra-photos-file" accept="image/*" multiple class="input-file">
-                    <span class="or-divider">oppure incolla URL foto extra:</span>
-                    <div style="display:flex; gap:8px; width:100%;">
-                        <input type="url" id="admin-extra-photo-url-input" class="input-field" placeholder="https://...">
-                        <button type="button" id="btn-add-extra-photo-url" class="btn-secondary btn-sm" style="white-space:nowrap;">+ Aggiungi Foto</button>
+            <section class="fe-media-panel" aria-labelledby="fe-extra-photo-title">
+                <div class="fe-media-panel-heading">
+                    <div>
+                        <strong id="fe-extra-photo-title">Foto aggiuntive</strong>
+                        <small>Puoi selezionare più immagini insieme</small>
                     </div>
                 </div>
-                <div id="admin-extra-photos-list" class="fe-admin-thumbs-grid"></div>
-            </div>
-
-            <!-- Caricamento o Link Video -->
-            <div class="form-group" style="margin-bottom:0;">
-                <label style="font-weight:600; font-size:0.85rem;">Video dell'articolo (Link YouTube / Vimeo / MP4 oppure carica breve clip max 20 MB):</label>
-                <div class="upload-controls" style="margin-top:6px;">
-                    <input type="url" id="admin-video-url" class="input-field" placeholder="Incolla link YouTube, Shorts, Vimeo o .mp4 diretto...">
-                    <span class="or-divider">oppure carica file video (.mp4 / .mov):</span>
-                    <input type="file" id="admin-video-file" accept="video/mp4,video/webm,video/quicktime" class="input-file">
+                <label class="fe-upload-dropzone fe-upload-dropzone-compact" for="admin-extra-photos-file">
+                    <span class="fe-upload-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="10" r="2"/><path d="m21 15-4.5-4.5L8 19"/></svg>
+                    </span>
+                    <span class="fe-upload-copy"><strong>Aggiungi immagini</strong><small>JPG, PNG o WebP · selezione multipla</small></span>
+                    <span class="fe-upload-action">Sfoglia</span>
+                </label>
+                <input type="file" id="admin-extra-photos-file" accept="image/*" multiple class="input-file fe-native-file-input">
+                <div class="fe-media-divider"><span>oppure da URL</span></div>
+                <div class="fe-media-url-row fe-media-url-row-action">
+                    <input type="url" id="admin-extra-photo-url-input" class="input-field" placeholder="https://esempio.it/foto.jpg">
+                    <button type="button" id="btn-add-extra-photo-url" class="btn-secondary btn-sm">Aggiungi</button>
                 </div>
-                <div id="admin-video-preview-status" class="field-help" style="margin-top:6px; color:#1D1D1F; font-weight:500;"></div>
-            </div>
+                <div id="admin-extra-photos-list" class="fe-admin-thumbs-grid"></div>
+            </section>
+
+            <section class="fe-media-panel" aria-labelledby="fe-video-title">
+                <div class="fe-media-panel-heading">
+                    <div>
+                        <strong id="fe-video-title">Video</strong>
+                        <small>YouTube, Vimeo oppure file breve fino a 20 MB</small>
+                    </div>
+                </div>
+                <div class="fe-media-url-row">
+                    <input type="url" id="admin-video-url" class="input-field" placeholder="Incolla il link del video…">
+                </div>
+                <div class="fe-media-divider"><span>oppure carica un file</span></div>
+                <label class="fe-upload-dropzone fe-upload-dropzone-compact" for="admin-video-file">
+                    <span class="fe-upload-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><rect x="3" y="5" width="14" height="14" rx="3"/><path d="m17 10 4-2v8l-4-2z"/></svg>
+                    </span>
+                    <span class="fe-upload-copy"><strong>Carica video</strong><small>MP4, WebM o MOV</small></span>
+                    <span class="fe-upload-action">Scegli</span>
+                </label>
+                <input type="file" id="admin-video-file" accept="video/mp4,video/webm,video/quicktime" class="input-file fe-native-file-input">
+                <div id="admin-video-preview-status" class="field-help fe-video-status"></div>
+            </section>
         `;
         workspace.parentNode.insertBefore(extraBox, workspace.nextSibling);
     }
@@ -873,7 +896,7 @@ function renderCatalogGrid() {
         }
 
         return `
-            <article class="article-card ${index === 0 ? 'article-card--featured' : ''}" data-article-id="${escapeHTML(art.id)}">
+            <article class="article-card" data-article-id="${escapeHTML(art.id)}">
                 <div class="card-thumb-wrapper">
                     <img src="${escapeHTML(art.cover_image)}" alt="${escapeHTML(art.title)}" class="card-thumb" loading="lazy">
                     ${badgesHTML.length > 0 ? `
@@ -892,8 +915,8 @@ function renderCatalogGrid() {
                     <p class="card-excerpt">${escapeHTML(art.excerpt)}</p>
                     <div class="card-footer">
                         <div class="card-stats">
-                            <span>♥ ${likesCount}</span>
-                            <span>💬 ${commentsCount}</span>
+                            <span class="fe-stat-item" aria-label="Mi piace">♡ ${likesCount}</span>
+                            <span class="fe-stat-item" aria-label="Commenti">◯ ${commentsCount}</span>
                         </div>
                         <span class="card-read-time">${readMinutes} min</span>
                         <span class="card-read-more">Leggi <span aria-hidden="true">↗</span></span>
@@ -2260,6 +2283,8 @@ function bindUIEvents() {
     document.getElementById('admin-image-file').addEventListener('change', async (e) => {
         const file = e.target.files?.[0];
         if (!file) return;
+        const coverHint = document.querySelector('label[for="admin-image-file"] .fe-upload-copy small');
+        if (coverHint) coverHint.textContent = file.name;
         try {
             showToast('Ottimizzazione e caricamento foto principale...');
             const url = await uploadMediaToSupabase(file, 'articles');
@@ -2286,6 +2311,8 @@ function bindUIEvents() {
         extraPhotosFileInput.addEventListener('change', async (e) => {
             const files = Array.from(e.target.files || []);
             if (files.length === 0) return;
+            const extraHint = document.querySelector('label[for="admin-extra-photos-file"] .fe-upload-copy small');
+            if (extraHint) extraHint.textContent = files.length === 1 ? files[0].name : `${files.length} immagini selezionate`;
 
             showToast(`Caricamento di ${files.length} foto in corso...`);
             for (const file of files) {
@@ -2334,6 +2361,8 @@ function bindUIEvents() {
         videoFileInput.addEventListener('change', async (e) => {
             const file = e.target.files?.[0];
             if (!file) return;
+            const videoHint = document.querySelector('label[for="admin-video-file"] .fe-upload-copy small');
+            if (videoHint) videoHint.textContent = file.name;
             try {
                 showToast('Caricamento video su Supabase in corso...');
                 const url = await uploadVideoToSupabase(file);
