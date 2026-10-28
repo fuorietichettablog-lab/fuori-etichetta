@@ -499,7 +499,7 @@
         if (imageFile) {
             var mediaBox = closestUsefulContainer(imageFile);
             if (mediaBox) {
-                mediaBox.classList.add("fe-box-media"); addCardClass(mediaBox);
+                mediaBox.classList.add("fe-box-media", "fe-editor-media"); addCardClass(mediaBox);
                 var mediaLabel = mediaBox.querySelector("label");
                 if (mediaLabel) mediaLabel.textContent = "Copertina articolo";
             }
@@ -510,7 +510,7 @@
         var form = document.getElementById("form-admin-article");
         if (form) {
             form.querySelectorAll("div").forEach(function(element) {
-                if (element.textContent.indexOf("Foto Aggiuntive") !== -1) element.classList.add("fe-box-extra");
+                if (element.id === "admin-extra-media-controls" || element.textContent.indexOf("Foto aggiuntive") !== -1 || element.textContent.indexOf("Foto Aggiuntive") !== -1) element.classList.add("fe-box-extra", "fe-editor-media-extra");
             });
         }
         var publishedLabel = document.querySelector("label[for='admin-article-published']");
