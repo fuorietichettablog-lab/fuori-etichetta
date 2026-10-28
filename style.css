@@ -17,6 +17,11 @@
     --surface-pill: #EFEFF4;      /* Sfondo pillole e filtri */
     --danger: #D70015;            /* Rosso sistema Apple per eliminazioni/segnalazioni */
     --danger-bg: #FFF2F4;
+    --warning: #B25000;
+    --warning-bg: #FFF8EC;
+    --warning-border: #F5D9A6;
+    --success: #007D35;
+    --success-bg: #ECFDF3;
     --radius-sm: 10px;
     --radius-md: 16px;
     --radius-lg: 22px;
@@ -100,6 +105,7 @@ html, body {
     overflow-x: auto;
     scrollbar-width: none;
 }
+
 .category-nav::-webkit-scrollbar {
     display: none;
 }
@@ -208,7 +214,7 @@ html, body {
 .btn-primary {
     background: var(--accent-black);
     color: #FFFFFF;
-    border: none;
+    border: 1px solid var(--accent-black);
     border-radius: var(--radius-pill);
     padding: 8px 18px;
     font-size: 0.88rem;
@@ -238,6 +244,7 @@ html, body {
     transition: var(--transition);
     display: inline-flex;
     align-items: center;
+    justify-content: center;
     gap: 6px;
 }
 
@@ -254,6 +261,11 @@ html, body {
     font-size: 0.86rem;
     font-weight: 600;
     cursor: pointer;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
 }
 
 .btn-danger:hover {
@@ -320,7 +332,6 @@ html, body {
     border-radius: var(--radius-pill);
 }
 
-/* Griglia compatta a 4 colonne su Desktop per mostrare tanti articoli subito */
 .articles-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(265px, 1fr));
@@ -347,7 +358,6 @@ html, body {
     border-color: var(--border-hover);
 }
 
-/* Miniatura compatta e nitida */
 .card-thumb-wrapper {
     position: relative;
     width: 100%;
@@ -367,7 +377,6 @@ html, body {
     transform: scale(1.03);
 }
 
-/* Indicatore sulla miniatura se ci sono cerchietti "Shop the Look" */
 .card-shop-badge {
     position: absolute;
     bottom: 10px;
@@ -517,7 +526,6 @@ html, body {
     line-height: 1.5;
 }
 
-/* Immagine e Cerchietti Shop the Look */
 .interactive-media-wrapper {
     margin-bottom: 26px;
 }
@@ -545,7 +553,6 @@ html, body {
     pointer-events: none;
 }
 
-/* Il Cerchietto Pulsante sul Vestito */
 .hotspot-pin {
     position: absolute;
     transform: translate(-50%, -50%);
@@ -576,7 +583,6 @@ html, body {
     transform: translate(-50%, -50%) scale(1.18);
 }
 
-/* Cartellino (Popover) con Link al Sito Originale del Vestito */
 .hotspot-card {
     position: absolute;
     bottom: calc(100% + 10px);
@@ -644,7 +650,6 @@ html, body {
     margin-bottom: 20px;
 }
 
-/* Barra Like Articolo */
 .article-engagement-bar {
     display: flex;
     align-items: center;
@@ -806,6 +811,7 @@ html, body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 
 .btn-vote {
@@ -843,7 +849,7 @@ html, body {
 }
 
 /* ==========================================================================
-   MODALI (AUTH, PROFILO, HOTSPOT) & FORM
+   MODALI (AUTH, PROFILO, HOTSPOT) & FORM COMUNI
    ========================================================================== */
 .modal-backdrop {
     position: fixed;
@@ -897,7 +903,6 @@ html, body {
     justify-content: center;
 }
 
-/* Segmented Control stile iOS */
 .auth-Segmented-control {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -956,6 +961,7 @@ html, body {
     font-size: 0.92rem;
     font-family: inherit;
     color: var(--text-primary);
+    transition: var(--transition);
 }
 
 .input-field:focus {
@@ -1014,121 +1020,7 @@ html, body {
 }
 
 /* ==========================================================================
-   PANNELLO ADMIN E EDITOR VISUALE HOTSPOTS
-   ========================================================================== */
-.admin-top-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 20px;
-}
-
-.admin-tabs {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 20px;
-    overflow-x: auto;
-    padding-bottom: 4px;
-}
-
-.admin-tab {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    padding: 8px 16px;
-    border-radius: var(--radius-pill);
-    font-size: 0.86rem;
-    font-weight: 600;
-    cursor: pointer;
-    white-space: nowrap;
-}
-
-.admin-tab.active {
-    background: var(--text-primary);
-    color: #FFFFFF;
-}
-
-.admin-card {
-    background: var(--bg-card);
-    border: 1px solid var(--border-subtle);
-    border-radius: var(--radius-md);
-    padding: 24px;
-}
-
-.upload-controls {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
-    margin-bottom: 8px;
-}
-
-.admin-preview-cursor {
-    cursor: crosshair;
-}
-
-.admin-hotspots-list-box {
-    margin-top: 14px;
-    background: var(--bg-page);
-    padding: 14px;
-    border-radius: var(--radius-sm);
-}
-
-.admin-hotspots-items {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    margin-top: 8px;
-}
-
-.admin-hotspot-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: #FFFFFF;
-    padding: 8px 12px;
-    border-radius: 8px;
-    border: 1px solid var(--border-subtle);
-    font-size: 0.84rem;
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.checkbox-group label {
-    margin-bottom: 0;
-}
-
-.admin-form-actions {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.admin-list-container {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 14px;
-}
-
-.admin-list-row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px 14px;
-    background: var(--bg-page);
-    border-radius: var(--radius-sm);
-    border: 1px solid var(--border-subtle);
-    flex-wrap: wrap;
-}
-
-/* ==========================================================================
-   STATI CARICAMENTO, TOAST E FOOTER
+   STATI CARICAMENTO, TOAST E FOOTER PUBBLICO
    ========================================================================== */
 .loading-state, .empty-state {
     text-align: center;
@@ -1189,7 +1081,7 @@ html, body {
 }
 
 /* ==========================================================================
-   RESPONSIVE DESIGN: OTTIMIZZAZIONE SPECIFICA PER IPHONE E SMARTPHONE
+   RESPONSIVE PUBBLICO (HOMEPAGE & ARTICOLI SU IPHONE)
    ========================================================================== */
 @media (max-width: 768px) {
     .header-inner {
@@ -1207,11 +1099,11 @@ html, body {
     .search-input {
         width: 135px;
     }
+
     .search-input:focus {
         width: 165px;
     }
 
-    /* Su iPhone: Card compatte orizzontali con miniatura laterale cliccabile! */
     .articles-grid {
         grid-template-columns: 1fr;
         gap: 12px;
@@ -1260,19 +1152,20 @@ html, body {
         grid-template-columns: 1fr;
     }
 }
+
 /* ==========================================================================
-   FUORI ETICHETTA — EDITORIAL CMS 2026
-   Dashboard professionale Admin / Collaboratore
+   FUORI ETICHETTA — STUDIO PRO CMS (ADMIN & COLLABORATOR WORKSPACE)
+   Architettura pulita: Sidebar Oscura + Topbar Contestuale + Sottomenu iOS
    ========================================================================== */
 
-/* Quando si entra nel CMS, il sito pubblico lascia spazio al back-office. */
+/* Isolamento completo del Workspace quando l'area Admin/Collab è attiva */
 body:has(#view-admin:not(.hidden)) {
-    background: #f4f5f7;
+    background-color: #F2F3F7;
 }
 
 body:has(#view-admin:not(.hidden)) .site-header,
 body:has(#view-admin:not(.hidden)) .site-footer {
-    display: none;
+    display: none !important;
 }
 
 body:has(#view-admin:not(.hidden)) .main-container {
@@ -1283,19 +1176,20 @@ body:has(#view-admin:not(.hidden)) .main-container {
     padding: 0;
 }
 
+/* Griglia Principale Back-Office */
 #view-admin:not(.hidden) {
     width: 100%;
-    max-width: 1600px;
+    max-width: 1640px;
     min-height: 100vh;
     margin: 0 auto;
-    padding: 18px;
+    padding: 20px 24px 60px;
     display: grid;
-    grid-template-columns: 264px minmax(0, 1fr);
+    grid-template-columns: 272px minmax(0, 1fr);
     grid-template-rows: auto 1fr;
     grid-template-areas:
         "sidebar header"
         "sidebar content";
-    gap: 18px 22px;
+    gap: 20px 24px;
     align-items: start;
 }
 
@@ -1305,32 +1199,36 @@ body:has(#view-admin:not(.hidden)) .main-container {
     box-sizing: border-box;
 }
 
-/* ============================= SIDEBAR ============================= */
+/* ==========================================================================
+   1. SIDEBAR DI NAVIGAZIONE PRINCIPALE (OBSIDIAN APPLE STUDIO)
+   ========================================================================== */
 #view-admin .admin-tabs {
     grid-area: sidebar;
     position: sticky;
-    top: 18px;
+    top: 20px;
     align-self: start;
     width: 100%;
-    min-height: calc(100vh - 36px);
+    min-height: calc(100vh - 40px);
     margin: 0;
-    padding: 14px;
+    padding: 18px 14px;
     display: flex;
     flex-direction: column;
-    gap: 18px;
-    overflow: hidden;
-    background: #111114;
-    border: 1px solid rgba(255,255,255,.06);
+    gap: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: linear-gradient(180deg, #111114 0%, #0B0B0E 100%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
     border-radius: 22px;
-    box-shadow: 0 22px 55px rgba(0,0,0,.15);
+    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.18);
 }
 
+/* Logo e Intestazione Sidebar */
 #view-admin .fe-nav-brand {
     display: flex;
     align-items: center;
-    gap: 11px;
-    padding: 5px 4px 13px;
-    border-bottom: 1px solid rgba(255,255,255,.09);
+    gap: 12px;
+    padding: 4px 6px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #view-admin .fe-nav-brand-mark {
@@ -1340,39 +1238,42 @@ body:has(#view-admin:not(.hidden)) .main-container {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    background: #fff;
-    color: #111114;
+    background: #FFFFFF;
+    color: #0B0B0E;
     border-radius: 11px;
-    font-size: .78rem;
+    font-size: 0.8rem;
     font-weight: 900;
-    letter-spacing: -.02em;
+    letter-spacing: -0.02em;
+    box-shadow: 0 4px 12px rgba(255, 255, 255, 0.12);
 }
 
 #view-admin .fe-nav-brand > span:last-child {
     display: flex;
     min-width: 0;
     flex-direction: column;
-    gap: 1px;
+    gap: 2px;
 }
 
 #view-admin .fe-nav-brand strong {
-    color: #fff;
-    font-size: .86rem;
+    color: #FFFFFF;
+    font-size: 0.88rem;
     font-weight: 800;
-    line-height: 1.25;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
 }
 
 #view-admin .fe-nav-brand small {
-    color: #7f7f89;
-    font-size: .66rem;
-    font-weight: 650;
-    letter-spacing: .02em;
+    color: #8E8E98;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.02em;
 }
 
+/* Gruppi di Menu (Editoria, Moderazione, Team, ecc.) */
 #view-admin .fe-nav-group {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 6px;
 }
 
 #view-admin .fe-nav-group.hidden {
@@ -1380,30 +1281,32 @@ body:has(#view-admin:not(.hidden)) .main-container {
 }
 
 #view-admin .fe-nav-group-title {
-    padding: 0 9px 5px;
-    color: #666672;
-    font-size: .61rem;
-    font-weight: 850;
-    letter-spacing: .095em;
+    padding: 0 10px 4px;
+    color: #6C6C76;
+    font-size: 0.63rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
 }
 
+/* Singola Voce Menu Sidebar */
 #view-admin .admin-tab {
     position: relative;
     width: 100%;
-    min-height: 58px;
+    min-height: 54px;
     margin: 0;
-    padding: 8px 10px;
+    padding: 9px 11px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 11px;
     background: transparent;
-    color: #b8b8c1;
+    color: #AEAEB7;
     border: 1px solid transparent;
-    border-radius: 12px;
+    border-radius: 13px;
     text-align: left;
     white-space: normal;
     cursor: pointer;
-    transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease;
+    transition: all 0.18s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 #view-admin .admin-tab.hidden,
@@ -1412,31 +1315,35 @@ body:has(#view-admin:not(.hidden)) .main-container {
 }
 
 #view-admin .admin-tab:hover {
-    background: rgba(255,255,255,.07);
-    color: #fff;
-    transform: translateX(1px);
+    background: rgba(255, 255, 255, 0.06);
+    color: #FFFFFF;
+    border-color: rgba(255, 255, 255, 0.05);
 }
 
 #view-admin .admin-tab.active {
-    background: #fff;
+    background: #FFFFFF;
     color: #111114;
-    border-color: #fff;
-    box-shadow: 0 9px 24px rgba(0,0,0,.20);
+    border-color: #FFFFFF;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.25);
 }
 
+/* Icona Voce Menu */
 #view-admin .fe-nav-icon {
-    width: 32px;
-    height: 32px;
-    flex: 0 0 32px;
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 9px;
-    background: rgba(255,255,255,.07);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: inherit;
+    transition: background 0.18s ease;
 }
 
 #view-admin .admin-tab.active .fe-nav-icon {
-    background: #f1f1f3;
+    background: #F2F3F7;
+    color: #111114;
 }
 
 #view-admin .fe-nav-icon svg,
@@ -1446,11 +1353,12 @@ body:has(#view-admin:not(.hidden)) .main-container {
     height: 17px;
     fill: none;
     stroke: currentColor;
-    stroke-width: 1.8;
+    stroke-width: 1.85;
     stroke-linecap: round;
     stroke-linejoin: round;
 }
 
+/* Testo e Sottotitolo Voce Menu */
 #view-admin .fe-nav-copy {
     min-width: 0;
     display: flex;
@@ -1460,65 +1368,74 @@ body:has(#view-admin:not(.hidden)) .main-container {
 
 #view-admin .fe-nav-copy strong {
     color: inherit;
-    font-size: .80rem;
-    font-weight: 780;
-    line-height: 1.22;
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1.2;
 }
 
 #view-admin .fe-nav-copy small {
-    color: #6f6f79;
-    font-size: .63rem;
-    font-weight: 600;
-    line-height: 1.24;
+    color: #72727C;
+    font-size: 0.65rem;
+    font-weight: 500;
+    line-height: 1.25;
 }
 
 #view-admin .admin-tab.active .fe-nav-copy small {
-    color: #73737c;
+    color: #686872;
 }
 
+/* Badge Contatore Segnalazioni in Sidebar */
 #view-admin .admin-tab .badge-alert {
     position: absolute;
-    top: 9px;
-    right: 9px;
-    min-width: 19px;
-    height: 19px;
-    padding: 0 5px;
+    top: 10px;
+    right: 10px;
+    min-width: 20px;
+    height: 20px;
+    padding: 0 6px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    background: var(--danger);
+    color: #FFFFFF;
     border: 2px solid #111114;
-    font-size: .60rem;
+    border-radius: 999px;
+    font-size: 0.62rem;
+    font-weight: 800;
 }
 
 #view-admin .admin-tab.active .badge-alert {
-    border-color: #fff;
+    border-color: #FFFFFF;
 }
 
+/* Footer della Sidebar (Pulsante Torna al Sito) */
 #view-admin .fe-nav-footer {
     margin-top: auto;
-    padding-top: 12px;
-    border-top: 1px solid rgba(255,255,255,.09);
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 #view-admin #btn-close-admin {
     width: 100%;
     min-height: 44px;
-    padding: 9px 11px;
+    padding: 10px 12px;
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    gap: 9px;
-    background: rgba(255,255,255,.055);
-    color: #c7c7cf;
-    border: 1px solid rgba(255,255,255,.09);
-    border-radius: 11px;
-    font-size: .76rem;
-    font-weight: 720;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.06);
+    color: #D1D1D8;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
 #view-admin #btn-close-admin:hover {
-    background: rgba(255,255,255,.1);
-    color: #fff;
+    background: rgba(255, 255, 255, 0.12);
+    color: #FFFFFF;
+    transform: translateY(-1px);
 }
 
 #view-admin .fe-nav-footer-icon {
@@ -1527,21 +1444,22 @@ body:has(#view-admin:not(.hidden)) .main-container {
     justify-content: center;
 }
 
-/* ============================= HEADER WORKSPACE ============================= */
+/* ==========================================================================
+   2. HEADER CONTESTUALE DEL WORKSPACE (BARRA SUPERIORE)
+   ========================================================================== */
 #view-admin .admin-top-bar {
     grid-area: header;
     min-width: 0;
-    min-height: 100px;
     margin: 0;
-    padding: 20px 24px;
+    padding: 20px 26px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 18px;
-    background: #fff;
-    border: 1px solid #e2e3e7;
-    border-radius: 19px;
-    box-shadow: 0 10px 30px rgba(18,18,22,.045);
+    background: #FFFFFF;
+    border: 1px solid #E2E3E8;
+    border-radius: 20px;
+    box-shadow: 0 8px 26px rgba(17, 17, 20, 0.035);
 }
 
 #view-admin .admin-top-bar > div:first-child {
@@ -1549,57 +1467,61 @@ body:has(#view-admin:not(.hidden)) .main-container {
 }
 
 #view-admin .fe-workspace-eyebrow {
-    margin-bottom: 6px;
-    color: #96969f;
-    font-size: .61rem;
-    font-weight: 850;
-    letter-spacing: .09em;
+    margin-bottom: 5px;
+    color: #8E8E98;
+    font-size: 0.63rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.09em;
 }
 
 #view-admin .admin-top-bar .catalog-title {
     margin: 0;
-    color: #17171a;
-    font-size: clamp(1.35rem, 2.1vw, 1.85rem);
-    font-weight: 840;
-    letter-spacing: -.034em;
-    line-height: 1.12;
+    color: #141417;
+    font-size: clamp(1.3rem, 2vw, 1.72rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
 }
 
 #view-admin .admin-top-bar .catalog-subtitle {
-    max-width: 760px;
-    margin: 6px 0 0;
-    color: #74747d;
-    font-size: .80rem;
+    max-width: 720px;
+    margin: 5px 0 0;
+    color: #6E6E77;
+    font-size: 0.83rem;
     line-height: 1.45;
 }
 
+/* Badge Ruolo (Admin / Collaboratore) e Nome Utente */
 #view-admin .fe-panel-meta {
     display: flex;
     align-items: center;
-    gap: 7px;
-    margin-top: 11px;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 #view-admin .fe-panel-role-pill {
     display: inline-flex;
     align-items: center;
     min-height: 24px;
-    padding: 4px 8px;
-    background: #17171a;
-    color: #fff;
+    padding: 4px 10px;
+    background: #141417;
+    color: #FFFFFF;
     border-radius: 999px;
-    font-size: .60rem;
-    font-weight: 820;
-    letter-spacing: .065em;
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
 #view-admin .fe-panel-user-name {
-    color: #96969f;
-    font-size: .68rem;
-    font-weight: 650;
+    color: #7C7C86;
+    font-size: 0.75rem;
+    font-weight: 600;
 }
 
+/* Bottone Hamburger per Mobile */
 #view-admin .fe-mobile-nav-toggle {
     display: none;
     width: 42px;
@@ -1607,18 +1529,95 @@ body:has(#view-admin:not(.hidden)) .main-container {
     flex: 0 0 42px;
     align-items: center;
     justify-content: center;
-    background: #17171a;
-    color: #fff;
-    border: 0;
-    border-radius: 11px;
+    background: #141417;
+    color: #FFFFFF;
+    border: none;
+    border-radius: 12px;
     cursor: pointer;
+    transition: var(--transition);
 }
 
 #view-admin .fe-mobile-nav-overlay {
     display: none;
 }
 
-/* ============================= WORKSPACE CONTENT ============================= */
+/* ==========================================================================
+   3. SOTTO-MENU (SUB-NAVIGATION SEGMENTATA PER SEZIONI E COLLABORATORI)
+   ========================================================================== */
+#view-admin .fe-collab-subnav,
+#view-admin .fe-admin-subnav {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(175px, 1fr));
+    gap: 6px;
+    margin: 0 0 18px;
+    padding: 6px;
+    background: #E6E7EC;
+    border: 1px solid #DCDDE3;
+    border-radius: 16px;
+}
+
+#view-admin .fe-collab-subnav-btn,
+#view-admin .fe-admin-subnav-btn {
+    min-width: 0;
+    min-height: 54px;
+    padding: 9px 14px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 2px;
+    background: transparent;
+    color: #62626C;
+    border: 1px solid transparent;
+    border-radius: 11px;
+    text-align: left;
+    cursor: pointer;
+    transition: all 0.16s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+#view-admin .fe-collab-subnav-btn:hover,
+#view-admin .fe-admin-subnav-btn:hover {
+    color: #141417;
+    background: rgba(255, 255, 255, 0.55);
+}
+
+#view-admin .fe-collab-subnav-btn.active,
+#view-admin .fe-admin-subnav-btn.active {
+    background: #FFFFFF;
+    color: #141417;
+    border-color: rgba(0, 0, 0, 0.04);
+    box-shadow: 0 4px 14px rgba(17, 17, 20, 0.07);
+}
+
+#view-admin .fe-collab-subnav-btn span,
+#view-admin .fe-admin-subnav-btn span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+#view-admin .fe-collab-subnav-btn small,
+#view-admin .fe-admin-subnav-btn small {
+    max-width: 100%;
+    overflow: hidden;
+    color: #8A8A94;
+    font-size: 0.65rem;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#tab-collaborators > .admin-card.fe-subpanel-hidden {
+    display: none !important;
+}
+
+#tab-collaborators > .admin-card[data-fe-collab-panel] {
+    min-height: 200px;
+}
+
+/* ==========================================================================
+   4. CONTENITORI CONTENUTO E CARD DEL WORKSPACE
+   ========================================================================== */
 #view-admin > .admin-tab-content {
     grid-area: content;
     min-width: 0;
@@ -1630,35 +1629,37 @@ body:has(#view-admin:not(.hidden)) .main-container {
 
 #view-admin > .admin-tab-content > .admin-card,
 #view-admin #tab-collaborators > .admin-card {
-    margin: 0 !important;
-    padding: 22px;
-    background: #fff;
-    border: 1px solid #e1e2e6;
-    border-radius: 17px;
-    box-shadow: 0 8px 26px rgba(20,20,24,.035);
+    margin: 0 0 18px 0 !important;
+    padding: 24px;
+    background: #FFFFFF;
+    border: 1px solid #E2E3E8;
+    border-radius: 18px;
+    box-shadow: 0 6px 22px rgba(17, 17, 20, 0.03);
 }
 
 #view-admin .admin-card h3 {
     margin: 0 0 6px;
-    color: #1c1c20;
-    font-size: 1rem;
-    font-weight: 810;
-    letter-spacing: -.02em;
+    color: #141417;
+    font-size: 1.05rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
 }
 
 #view-admin .field-help {
-    color: #7e7e87;
-    font-size: .76rem;
+    color: #767680;
+    font-size: 0.78rem;
     line-height: 1.5;
 }
 
 #view-admin .divider {
     margin: 24px 0;
     border: 0;
-    border-top: 1px solid #e8e8eb;
+    border-top: 1px solid #EAEBEF;
 }
 
-/* ============================= EDITOR ARTICOLO ============================= */
+/* ==========================================================================
+   5. EDITOR ARTICOLI (LAYOUT BENTO A 2 COLONNE: SCRITTURA + SIDEBAR MEDIA)
+   ========================================================================== */
 #form-admin-article {
     margin: 0;
     padding: 0;
@@ -1669,8 +1670,8 @@ body:has(#view-admin:not(.hidden)) .main-container {
 
 #form-admin-article .fe-admin-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1.58fr) minmax(320px, .72fr);
-    gap: 18px;
+    grid-template-columns: minmax(0, 1.62fr) minmax(330px, 0.78fr);
+    gap: 20px;
     align-items: start;
 }
 
@@ -1679,45 +1680,42 @@ body:has(#view-admin:not(.hidden)) .main-container {
     min-width: 0;
     display: flex;
     flex-direction: column;
-    gap: 13px;
+    gap: 16px;
 }
 
 #form-admin-article .fe-admin-sidebar {
     position: sticky;
-    top: 18px;
+    top: 20px;
 }
 
 #form-admin-article .fe-editor-section-heading {
-    padding: 0 2px 2px;
+    padding: 2px 4px 0;
 }
 
 #form-admin-article .fe-editor-section-heading strong {
     display: block;
-    color: #202024;
-    font-size: .83rem;
-    font-weight: 820;
+    color: #141417;
+    font-size: 0.85rem;
+    font-weight: 800;
+    letter-spacing: -0.01em;
 }
 
 #form-admin-article .fe-editor-section-heading span {
     display: block;
     margin-top: 2px;
-    color: #9999a2;
-    font-size: .66rem;
+    color: #8A8A94;
+    font-size: 0.69rem;
     line-height: 1.35;
 }
 
 #form-admin-article .fe-admin-card {
     width: 100%;
     margin: 0 !important;
-    padding: 20px;
-    background: #fff;
-    border: 1px solid #e1e2e6;
-    border-radius: 16px;
-    box-shadow: 0 7px 24px rgba(18,18,22,.03);
-}
-
-#form-admin-article .fe-editor-basics {
     padding: 22px;
+    background: #FFFFFF;
+    border: 1px solid #E2E3E8;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(17, 17, 20, 0.03);
 }
 
 #form-admin-article .fe-editor-basics .form-row-2 {
@@ -1736,29 +1734,30 @@ body:has(#view-admin:not(.hidden)) .main-container {
     margin-top: 16px;
 }
 
-#form-admin-article .fe-box-content {
-    padding: 22px;
-}
-
-#form-admin-article label {
+/* Etichette Campi */
+#form-admin-article label,
+#tab-collaborators label {
     display: block;
     margin: 0 0 7px;
-    color: #777780;
-    font-size: .65rem;
-    font-weight: 820;
-    letter-spacing: .055em;
+    color: #6E6E78;
+    font-size: 0.68rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
     text-transform: uppercase;
 }
 
-#form-admin-article .checkbox-group label {
+#form-admin-article .checkbox-group label,
+#tab-collaborators .checkbox-group label {
     margin: 0;
-    color: #29292e;
-    font-size: .79rem;
+    color: #1D1D21;
+    font-size: 0.84rem;
     font-weight: 700;
     letter-spacing: 0;
     text-transform: none;
+    cursor: pointer;
 }
 
+/* Campi di Testo, Input e Textarea */
 #form-admin-article input[type="text"],
 #form-admin-article input[type="url"],
 #form-admin-article input[type="email"],
@@ -1766,12 +1765,12 @@ body:has(#view-admin:not(.hidden)) .main-container {
 #form-admin-article textarea,
 #tab-collaborators .input-field {
     width: 100%;
-    color: #202024;
-    background: #f8f8fa;
-    border: 1px solid #dedfe4;
-    border-radius: 10px;
+    color: #18181C;
+    background: #F8F9FB;
+    border: 1px solid #DCDDE4;
+    border-radius: 11px;
     outline: none;
-    transition: border-color .15s ease, box-shadow .15s ease, background .15s ease;
+    transition: border-color 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
 }
 
 #form-admin-article input[type="text"],
@@ -1779,9 +1778,9 @@ body:has(#view-admin:not(.hidden)) .main-container {
 #form-admin-article input[type="email"],
 #form-admin-article select,
 #tab-collaborators .input-field {
-    min-height: 43px;
-    padding: 10px 12px;
-    font-size: .87rem;
+    min-height: 42px;
+    padding: 9px 13px;
+    font-size: 0.88rem;
 }
 
 #form-admin-article textarea {
@@ -1793,165 +1792,213 @@ body:has(#view-admin:not(.hidden)) .main-container {
 #form-admin-article textarea:focus,
 #form-admin-article select:focus,
 #tab-collaborators .input-field:focus {
-    background: #fff;
-    border-color: #26262b;
-    box-shadow: 0 0 0 3px rgba(25,25,30,.055);
+    background: #FFFFFF;
+    border-color: #141417;
+    box-shadow: 0 0 0 3px rgba(20, 20, 23, 0.06);
 }
 
+/* Titolo Articolo Editoriale */
 #admin-article-title {
     min-height: auto !important;
-    padding: 5px 0 10px !important;
+    padding: 4px 0 10px !important;
     background: transparent !important;
     border: 0 !important;
-    border-bottom: 2px solid #e0e1e5 !important;
+    border-bottom: 2px solid #E2E3E8 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
-    color: #17171a !important;
-    font-size: clamp(1.45rem, 2.2vw, 2rem) !important;
-    font-weight: 840 !important;
-    letter-spacing: -.035em !important;
+    color: #111114 !important;
+    font-size: clamp(1.4rem, 2.1vw, 1.95rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.03em !important;
 }
 
 #admin-article-title:focus {
-    border-bottom-color: #17171a !important;
+    border-bottom-color: #111114 !important;
     box-shadow: none !important;
 }
 
 #admin-article-excerpt {
-    min-height: 76px;
-    font-size: .92rem;
+    min-height: 82px;
+    font-size: 0.92rem;
     line-height: 1.55;
 }
 
+/* Foglio di Scrittura Articolo */
 #admin-article-content {
-    min-height: 560px;
+    min-height: 540px;
     padding: 20px !important;
-    background: #fbfbfc !important;
-    color: #1d1d21;
+    background: #FCFCFD !important;
+    color: #18181C;
     font-family: Georgia, "Times New Roman", serif !important;
-    font-size: 1.02rem !important;
-    line-height: 1.82 !important;
-    border-radius: 12px !important;
+    font-size: 1.03rem !important;
+    line-height: 1.8 !important;
+    border-radius: 13px !important;
 }
 
 #admin-article-content:focus {
-    background: #fff !important;
+    background: #FFFFFF !important;
 }
 
+/* Statistiche di Scrittura (Parole, Caratteri, Tempo Lettura) */
 .fe-writing-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
-    margin-top: 9px;
+    gap: 8px;
+    margin-top: 12px;
 }
 
 .fe-stat-pill {
     display: inline-flex;
     align-items: center;
-    min-height: 26px;
-    padding: 5px 9px;
-    background: #f1f2f4;
-    color: #76767e;
+    min-height: 28px;
+    padding: 4px 11px;
+    background: #F1F2F6;
+    color: #64646E;
+    border: 1px solid #E4E5EC;
     border-radius: 999px;
-    font-size: .65rem;
-    font-weight: 720;
+    font-size: 0.7rem;
+    font-weight: 700;
 }
 
+/* Bottoni Scelta Categoria */
 .fe-cat-pills {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 7px;
-    margin-top: 5px;
+    gap: 8px;
+    margin-top: 4px;
 }
 
 .fe-cat-btn {
-    min-height: 39px;
-    padding: 8px;
-    background: #f8f8fa;
-    color: #5c5c64;
-    border: 1px solid #dedfe4;
-    border-radius: 9px;
-    font-size: .78rem;
-    font-weight: 740;
+    min-height: 40px;
+    padding: 8px 10px;
+    background: #F8F9FB;
+    color: #5A5A64;
+    border: 1px solid #DCDDE4;
+    border-radius: 10px;
+    font-size: 0.8rem;
+    font-weight: 700;
     cursor: pointer;
-    transition: .15s ease;
+    transition: all 0.15s ease;
 }
 
 .fe-cat-btn:hover {
-    background: #f0f1f3;
-    color: #17171a;
+    background: #EFEFF4;
+    color: #141417;
 }
 
 .fe-cat-btn.active {
-    background: #17171a;
-    color: #fff;
-    border-color: #17171a;
+    background: #141417;
+    color: #FFFFFF;
+    border-color: #141417;
+    box-shadow: 0 4px 12px rgba(20, 20, 23, 0.14);
+}
+
+/* Controlli Upload File e Hotspot Preview */
+.upload-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 10px;
 }
 
 #form-admin-article input[type="file"] {
     width: 100%;
-    padding: 9px;
-    background: #f8f8fa;
-    border: 1.5px dashed #d1d2d7;
-    border-radius: 10px;
-    color: #62626b;
-    font-size: .72rem;
+    padding: 10px;
+    background: #F8F9FB;
+    border: 1.5px dashed #C8C9D2;
+    border-radius: 11px;
+    color: #5A5A64;
+    font-size: 0.75rem;
     cursor: pointer;
+    transition: border-color 0.15s ease;
+}
+
+#form-admin-article input[type="file"]:hover {
+    border-color: #141417;
 }
 
 #form-admin-article input[type="file"]::file-selector-button {
-    margin-right: 9px;
-    padding: 7px 10px;
-    background: #17171a;
-    color: #fff;
+    margin-right: 10px;
+    padding: 7px 11px;
+    background: #141417;
+    color: #FFFFFF;
     border: 0;
-    border-radius: 7px;
-    font-size: .70rem;
-    font-weight: 740;
+    border-radius: 8px;
+    font-size: 0.72rem;
+    font-weight: 700;
     cursor: pointer;
 }
 
-#form-admin-article .field-help,
-#form-admin-article .or-divider {
-    color: #96969f;
-    font-size: .69rem;
-    line-height: 1.45;
+.admin-preview-cursor {
+    cursor: crosshair;
 }
 
-#form-admin-article .checkbox-group {
+.admin-hotspots-list-box {
+    margin-top: 12px;
+    background: #F8F9FB;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #E4E5EC;
+}
+
+.admin-hotspots-items {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.admin-hotspot-row {
     display: flex;
     align-items: center;
-    gap: 9px;
-    padding: 13px 14px;
-    background: #f8f8fa;
-    border: 1px solid #e0e1e5;
-    border-radius: 11px;
+    justify-content: space-between;
+    gap: 10px;
+    background: #FFFFFF;
+    padding: 8px 12px;
+    border-radius: 9px;
+    border: 1px solid #E2E3E8;
+    font-size: 0.82rem;
+}
+
+/* Box Stato Pubblicazione & Avviso Revisione Collaboratori */
+#form-admin-article .checkbox-group,
+#tab-collaborators .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 14px 16px;
+    background: #F8F9FB;
+    border: 1px solid #E2E3E8;
+    border-radius: 13px;
 }
 
 #form-admin-article input[type="checkbox"],
 #tab-collaborators input[type="checkbox"] {
-    width: 17px;
-    height: 17px;
-    accent-color: #17171a;
+    width: 18px;
+    height: 18px;
+    accent-color: #141417;
+    cursor: pointer;
 }
 
 #collaborator-submit-hint {
     margin: 0 !important;
-    padding: 13px 14px !important;
-    background: #fff9eb !important;
-    color: #745116 !important;
-    border: 1px solid #f1ddb0 !important;
-    border-left: 3px solid #a66b0a !important;
-    border-radius: 11px !important;
+    padding: 14px 16px !important;
+    background: var(--warning-bg) !important;
+    color: #6E4200 !important;
+    border: 1px solid var(--warning-border) !important;
+    border-left: 4px solid var(--warning) !important;
+    border-radius: 13px !important;
     box-shadow: none !important;
-    font-size: .73rem !important;
+    font-size: 0.76rem !important;
+    font-weight: 600;
     line-height: 1.5 !important;
 }
 
+/* Azioni Salvataggio / Reset Form */
 #form-admin-article .admin-form-actions {
     display: grid;
-    grid-template-columns: .75fr 1.35fr;
-    gap: 8px;
+    grid-template-columns: 0.8fr 1.2fr;
+    gap: 10px;
     width: 100%;
     margin: 0;
     padding: 0;
@@ -1959,147 +2006,80 @@ body:has(#view-admin:not(.hidden)) .main-container {
 
 #btn-save-article,
 #btn-reset-article-form {
-    min-height: 47px;
-    border-radius: 10px;
+    min-height: 46px;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: var(--transition);
 }
 
 #btn-save-article {
-    background: #17171a;
-    color: #fff;
-    border: 1px solid #17171a;
-    font-size: .84rem;
+    background: #141417;
+    color: #FFFFFF;
+    border: 1px solid #141417;
+    font-size: 0.86rem;
     font-weight: 800;
+    box-shadow: 0 6px 18px rgba(20, 20, 23, 0.14);
+}
+
+#btn-save-article:hover {
+    background: #000000;
+    transform: translateY(-1px);
 }
 
 #btn-reset-article-form {
-    background: #fff;
-    color: #62626b;
-    border: 1px solid #dedfe4;
-    font-size: .77rem;
+    background: #FFFFFF;
+    color: #5A5A64;
+    border: 1px solid #DCDDE4;
+    font-size: 0.8rem;
     font-weight: 700;
 }
 
-/* ============================= SOTTOMENU COLLABORATORI ============================= */
-#tab-collaborators:not(.hidden) {
-    display: block;
+#btn-reset-article-form:hover {
+    background: #F2F3F7;
+    color: #141417;
 }
 
-#tab-collaborators .fe-collab-subnav {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 8px;
-    margin: 0 0 14px;
-    padding: 6px;
-    background: #e9eaed;
-    border: 1px solid #e0e1e5;
-    border-radius: 14px;
-}
-
-#tab-collaborators .fe-collab-subnav-btn {
-    min-width: 0;
-    min-height: 58px;
-    padding: 8px 10px;
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    justify-content: center;
-    gap: 2px;
-    background: transparent;
-    color: #686871;
-    border: 0;
-    border-radius: 10px;
-    text-align: left;
-    cursor: pointer;
-    transition: .15s ease;
-}
-
-#tab-collaborators .fe-collab-subnav-btn:hover {
-    color: #25252a;
-    background: rgba(255,255,255,.55);
-}
-
-#tab-collaborators .fe-collab-subnav-btn.active {
-    background: #fff;
-    color: #17171a;
-    box-shadow: 0 3px 12px rgba(0,0,0,.065);
-}
-
-#tab-collaborators .fe-collab-subnav-btn span {
-    font-size: .76rem;
-    font-weight: 790;
-}
-
-#tab-collaborators .fe-collab-subnav-btn small {
-    max-width: 100%;
-    overflow: hidden;
-    color: #96969f;
-    font-size: .61rem;
-    font-weight: 620;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-}
-
-#tab-collaborators > .admin-card.fe-subpanel-hidden {
-    display: none !important;
-}
-
-#tab-collaborators > .admin-card[data-fe-collab-panel] {
-    min-height: 180px;
-}
-
-#tab-collaborators .checkbox-group {
-    margin-top: 14px !important;
-    padding: 14px;
-    display: flex;
-    align-items: center;
-    gap: 9px;
-    background: #f8f8fa;
-    border: 1px solid #e0e1e5;
-    border-radius: 11px;
-}
-
-#tab-collaborators #btn-promote-collaborator {
-    min-height: 43px;
-    border-radius: 10px;
-    font-size: .78rem;
-    font-weight: 760;
-}
-
-/* ============================= LISTE GESTIONALI ============================= */
+/* ==========================================================================
+   6. LISTE GESTIONALI (ARTICOLI, COLLABORATORI, MODERAZIONE, UTENTI)
+   ========================================================================== */
 #view-admin .admin-list-container {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 10px;
     margin-top: 14px;
 }
 
 #view-admin .admin-list-row {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
-    gap: 13px;
+    gap: 14px;
     align-items: center;
-    min-height: 66px;
-    padding: 13px 14px;
-    background: #f8f8fa;
-    border: 1px solid #e4e4e8;
-    border-radius: 12px;
-    transition: background .15s ease, border-color .15s ease, box-shadow .15s ease;
+    min-height: 64px;
+    padding: 14px 16px;
+    background: #F8F9FB;
+    border: 1px solid #E4E5EC;
+    border-radius: 14px;
+    transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
 #view-admin .admin-list-row:hover {
-    background: #fff;
-    border-color: #d2d3d8;
-    box-shadow: 0 7px 18px rgba(20,20,24,.035);
+    background: #FFFFFF;
+    border-color: #D0D1DA;
+    box-shadow: 0 6px 18px rgba(17, 17, 20, 0.04);
 }
 
 #view-admin .admin-list-row strong {
-    color: #202024;
-    font-weight: 780;
+    color: #18181C;
+    font-size: 0.9rem;
+    font-weight: 700;
 }
 
 #view-admin .admin-list-row .btn-sm {
-    min-height: 33px;
-    border-radius: 8px;
+    min-height: 34px;
+    padding: 6px 12px;
+    border-radius: 9px;
+    font-size: 0.78rem;
+    font-weight: 600;
     white-space: nowrap;
 }
 
@@ -2108,15 +2088,17 @@ body:has(#view-admin:not(.hidden)) .main-container {
     align-items: center;
     flex-wrap: wrap;
     justify-content: flex-end;
-    gap: 6px !important;
+    gap: 8px !important;
 }
 
-/* ============================= RESPONSIVE CMS ============================= */
+/* ==========================================================================
+   7. RESPONSIVE BACK-OFFICE (TABLET, IPHONE E SMARTPHONE)
+   ========================================================================== */
 @media (max-width: 1180px) {
     #view-admin:not(.hidden) {
-        grid-template-columns: 238px minmax(0, 1fr);
+        grid-template-columns: 244px minmax(0, 1fr);
         padding: 14px;
-        gap: 14px 16px;
+        gap: 16px;
     }
 
     #view-admin .admin-tabs {
@@ -2125,46 +2107,44 @@ body:has(#view-admin:not(.hidden)) .main-container {
     }
 
     #form-admin-article .fe-admin-layout {
-        grid-template-columns: minmax(0, 1.25fr) minmax(290px, .75fr);
-    }
-
-    #admin-article-content {
-        min-height: 500px;
+        grid-template-columns: minmax(0, 1.3fr) minmax(290px, 0.8fr);
     }
 }
 
 @media (max-width: 980px) {
     #view-admin:not(.hidden) {
         display: block;
-        padding: 12px;
+        padding: 12px 12px 50px;
     }
 
     #view-admin .admin-top-bar {
         position: sticky;
-        top: 0;
+        top: 8px;
         z-index: 70;
-        min-height: 86px;
-        padding: 15px 16px;
-        margin-bottom: 12px;
-        border-radius: 15px;
+        padding: 15px 18px;
+        margin-bottom: 16px;
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: saturate(180%) blur(16px);
+        -webkit-backdrop-filter: saturate(180%) blur(16px);
     }
 
     #view-admin .fe-mobile-nav-toggle {
         display: inline-flex;
     }
 
+    /* Menu Laterale a Comparsa (Drawer) su Tablet e iPhone */
     #view-admin .admin-tabs {
         position: fixed;
         z-index: 120;
         top: 10px;
         bottom: 10px;
         left: 10px;
-        width: min(310px, calc(100vw - 42px));
+        width: min(300px, calc(100vw - 44px));
         min-height: 0;
         height: auto;
         transform: translateX(calc(-100% - 24px));
-        transition: transform .22s cubic-bezier(.25,1,.5,1);
-        overflow-y: auto;
+        transition: transform 0.24s cubic-bezier(0.25, 1, 0.5, 1);
     }
 
     #view-admin.fe-mobile-nav-open .admin-tabs {
@@ -2178,9 +2158,11 @@ body:has(#view-admin:not(.hidden)) .main-container {
         display: block;
         visibility: hidden;
         opacity: 0;
-        background: rgba(12,12,15,.45);
+        background: rgba(11, 11, 14, 0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
         border: 0;
-        transition: opacity .18s ease, visibility .18s ease;
+        transition: opacity 0.2s ease, visibility 0.2s ease;
     }
 
     #view-admin.fe-mobile-nav-open .fe-mobile-nav-overlay {
@@ -2195,86 +2177,71 @@ body:has(#view-admin:not(.hidden)) .main-container {
     #form-admin-article .fe-admin-sidebar {
         position: static;
     }
-
-    #tab-collaborators .fe-collab-subnav {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
 }
 
 @media (max-width: 640px) {
     #view-admin:not(.hidden) {
-        padding: 7px;
+        padding: 8px 8px 44px;
     }
 
     #view-admin .admin-top-bar {
         align-items: flex-start;
-        min-height: 0;
-        padding: 13px;
-        gap: 11px;
-        border-radius: 13px;
+        padding: 14px;
+        gap: 12px;
+        border-radius: 14px;
     }
 
     #view-admin .admin-top-bar .catalog-title {
-        font-size: 1.18rem;
+        font-size: 1.2rem;
     }
 
     #view-admin .admin-top-bar .catalog-subtitle {
-        font-size: .70rem;
-    }
-
-    #view-admin .fe-workspace-eyebrow {
-        font-size: .56rem;
-    }
-
-    #view-admin .fe-panel-meta {
-        margin-top: 8px;
+        font-size: 0.75rem;
     }
 
     #view-admin > .admin-tab-content > .admin-card,
     #view-admin #tab-collaborators > .admin-card,
     #form-admin-article .fe-admin-card {
-        padding: 15px;
-        border-radius: 13px;
-    }
-
-    #form-admin-article .fe-editor-basics {
         padding: 16px;
-    }
-
-    #form-admin-article .form-row-2 {
-        grid-template-columns: 1fr;
-    }
-
-    #admin-article-title {
-        font-size: 1.32rem !important;
+        border-radius: 15px;
     }
 
     #admin-article-content {
-        min-height: 400px;
+        min-height: 380px;
         padding: 14px !important;
-        font-size: .98rem !important;
+        font-size: 0.98rem !important;
     }
 
-    .fe-cat-pills {
-        grid-template-columns: 1fr;
+    /* Sotto-menu scorrevole orizzontalmente su iPhone per non occupare mezzo schermo */
+    #view-admin .fe-collab-subnav,
+    #view-admin .fe-admin-subnav {
+        display: flex;
+        overflow-x: auto;
+        scrollbar-width: none;
+        gap: 6px;
+        padding: 5px;
+    }
+
+    #view-admin .fe-collab-subnav::-webkit-scrollbar,
+    #view-admin .fe-admin-subnav::-webkit-scrollbar {
+        display: none;
+    }
+
+    #view-admin .fe-collab-subnav-btn,
+    #view-admin .fe-admin-subnav-btn {
+        flex: 0 0 auto;
+        min-width: 148px;
+        min-height: 48px;
+        padding: 8px 12px;
     }
 
     #form-admin-article .admin-form-actions {
         grid-template-columns: 1fr;
     }
 
-    #tab-collaborators .fe-collab-subnav {
-        grid-template-columns: 1fr 1fr;
-        gap: 5px;
-        padding: 5px;
-    }
-
-    #tab-collaborators .fe-collab-subnav-btn {
-        min-height: 52px;
-    }
-
     #view-admin .admin-list-row {
         grid-template-columns: 1fr;
+        gap: 10px;
     }
 
     #view-admin .admin-list-row > div:last-child {
