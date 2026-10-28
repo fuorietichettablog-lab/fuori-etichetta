@@ -4,34 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Fuori Etichetta — Moda, Outfit & Tendenze</title>
-    <meta name="description" content="Fuori Etichetta: il magazine digitale dedicato alle ultime novità della moda, tendenze e consigli di outfit interattivi.">
+    <meta name="description" content="Fuori Etichetta: il blog editoriale dedicato alle ultime novità della moda, tendenze e consigli di outfit interattivi.">
     <link rel="manifest" href="manifest.json">
-    <!-- Font Editoriali: Inter, Plus Jakarta Sans & Instrument Serif -->
+    <!-- Font Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Foglio di stile Cupertino Editorial & Studio CMS -->
-    <link rel="stylesheet" href="style.css?v=6">
+    <!-- Foglio di stile Cupertino Editorial -->
+    <link rel="stylesheet" href="style.css?v=9">
     
     <!-- Libreria Ufficiale Supabase JS v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
-    <!-- BARRA DI PROGRESSO LETTURA ARTICOLO -->
-    <div id="fe-reading-progress-bar" class="fe-reading-progress-bar" aria-hidden="true"></div>
-
     <!-- NOTIFICHE TOAST -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <!-- HEADER GLASSMORPHISM STILE APPLE MAGAZINE -->
+    <!-- HEADER GLASSMORPHISM STILE APPLE -->
     <header class="site-header">
         <div class="header-inner">
             <a href="#" id="logo-link" class="brand-logo" aria-label="Torna alla Homepage">
                 <span class="brand-dot"></span>
-                <span class="brand-text">FUORI ETICHETTA</span>
-                <span class="brand-edition">JOURNAL</span>
+                FUORI ETICHETTA
             </a>
 
             <!-- Navigazione Categorie -->
@@ -53,8 +49,8 @@
                     <input type="search" id="search-input" class="search-input" placeholder="Cerca outfit, brand..." aria-label="Cerca articoli">
                 </div>
 
-                <!-- Bottone Pannello Admin / Studio Collaboratore -->
-                <button id="btn-open-admin" class="btn-secondary fe-btn-studio hidden" title="Apri Studio Redazionale">
+                <!-- Bottone Pannello Admin -->
+                <button id="btn-open-admin" class="btn-secondary hidden" title="Pannello di Controllo Admin">
                     <span>Admin</span>
                     <span id="admin-report-badge" class="badge-alert hidden">0</span>
                 </button>
@@ -74,11 +70,33 @@
     <!-- CONTENITORE PRINCIPALE -->
     <main class="main-container">
 
-        <!-- VISTA 1: CATALOGO EDITORIALE (HOMEPAGE) -->
+        <!-- VISTA 1: CATALOGO COMPATTO (HOMEPAGE) -->
         <section id="view-home" class="view-section">
-            <div class="catalog-header">
-                <div class="catalog-heading-group">
-                    <span class="catalog-eyebrow">CURATED FASHION ARCHIVE</span>
+            <section class="fe-home-hero" aria-labelledby="fe-home-hero-title">
+                <div class="fe-hero-copy">
+                    <span class="fe-hero-kicker">INDEPENDENT FASHION JOURNAL</span>
+                    <h1 id="fe-home-hero-title">La moda, <em>fuori etichetta.</em></h1>
+                    <p>Storie, analisi, outfit e cultura fashion raccontati con un punto di vista indipendente. Meno rumore, più contenuto.</p>
+                    <div class="fe-hero-actions">
+                        <button type="button" id="btn-hero-explore" class="btn-primary fe-hero-primary">Esplora il magazine</button>
+                        <button type="button" id="btn-hero-latest" class="btn-secondary fe-hero-secondary">Leggi l’ultimo articolo</button>
+                    </div>
+                </div>
+                <div class="fe-hero-visual" aria-hidden="true">
+                    <div class="fe-hero-monogram">FE</div>
+                    <div class="fe-hero-caption"><span>EST. 2026</span><span>ITALY</span></div>
+                </div>
+            </section>
+
+            <div class="fe-editorial-ticker" aria-hidden="true">
+                <div class="fe-editorial-ticker-track">
+                    <span>EDITORIALE INDIPENDENTE</span><i></i><span>OUTFIT</span><i></i><span>CULTURA</span><i></i><span>TENDENZE</span><i></i><span>BRAND</span><i></i>
+                    <span>EDITORIALE INDIPENDENTE</span><i></i><span>OUTFIT</span><i></i><span>CULTURA</span><i></i><span>TENDENZE</span><i></i><span>BRAND</span><i></i>
+                </div>
+            </div>
+
+            <div id="fe-catalog-anchor" class="catalog-header">
+                <div>
                     <h1 id="catalog-title" class="catalog-title">Esplora il Catalogo</h1>
                     <p id="catalog-subtitle" class="catalog-subtitle">Ultime novità, analisi di stile e outfit interattivi cliccabili.</p>
                 </div>
@@ -97,7 +115,7 @@
                 <button id="btn-reset-filters" class="btn-secondary">Mostra tutti gli articoli</button>
             </div>
 
-            <!-- Griglia Articoli (Con Hero Cover Story automatica) -->
+            <!-- Griglia Compatta Articoli -->
             <div id="articles-grid" class="articles-grid"></div>
         </section>
 
@@ -185,7 +203,7 @@
             </section>
         </article>
 
-        <!-- VISTA 3: STUDIO EDITORIALE & CMS (ADMIN + REDAZIONE COLLABORATORI) -->
+        <!-- VISTA 3: PANNELLO AMMINISTRATIVO PROTETTO -->
         <section id="view-admin" class="view-section hidden">
             <div class="admin-top-bar">
                 <div>
@@ -196,7 +214,8 @@
             </div>
 
             <div class="admin-tabs">
-                <button class="admin-tab active" data-tab="tab-editor">Nuovo / Modifica Articolo</button>
+                <button class="admin-tab active" data-tab="tab-dashboard">Panoramica</button>
+                <button class="admin-tab" data-tab="tab-editor">Nuovo / Modifica Articolo</button>
                 <button id="tab-manage-articles-btn" class="admin-tab" data-tab="tab-manage-articles">Tutti gli Articoli</button>
                 <button class="admin-tab" data-tab="tab-collaborators" data-admin-only="true">
                     Collaboratori
@@ -209,8 +228,78 @@
                 <button class="admin-tab" data-tab="tab-users" data-admin-only="true">Utenti Iscritti</button>
             </div>
 
+            <!-- DASHBOARD EDITORIALE -->
+            <div id="tab-dashboard" class="admin-tab-content">
+                <div class="fe-dashboard-grid">
+                    <section class="fe-dashboard-welcome">
+                        <span class="fe-dashboard-kicker">EDITORIAL WORKSPACE</span>
+                        <h2 id="fe-dashboard-greeting">Bentornato nella redazione.</h2>
+                        <p id="fe-dashboard-intro">Da qui puoi controllare i contenuti, aprire rapidamente l’editor e gestire il flusso editoriale.</p>
+                        <div class="fe-dashboard-quick-actions">
+                            <button type="button" class="btn-primary" data-fe-open-tab="tab-editor">+ Nuovo articolo</button>
+                            <button type="button" class="btn-secondary" data-fe-open-tab="tab-manage-articles">Apri archivio</button>
+                            <button type="button" class="btn-secondary" data-fe-open-tab="tab-collaborators" data-admin-only="true">Revisioni</button>
+                        </div>
+                    </section>
+
+                    <section class="fe-dashboard-status" aria-label="Stato workspace">
+                        <div class="fe-live-dot"></div>
+                        <div>
+                            <span>Workspace</span>
+                            <strong id="fe-dashboard-role">Editoriale</strong>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="fe-dashboard-metrics">
+                    <article class="fe-metric-card">
+                        <span class="fe-metric-label">Articoli visibili</span>
+                        <strong id="fe-metric-published">—</strong>
+                        <small>nel magazine pubblico</small>
+                    </article>
+                    <article class="fe-metric-card">
+                        <span class="fe-metric-label" id="fe-metric-archive-label">Articoli in archivio</span>
+                        <strong id="fe-metric-archive">—</strong>
+                        <small>contenuti gestibili</small>
+                    </article>
+                    <article class="fe-metric-card" data-admin-only="true">
+                        <span class="fe-metric-label">In revisione</span>
+                        <strong id="fe-metric-pending">—</strong>
+                        <small>articoli da approvare</small>
+                    </article>
+                    <article class="fe-metric-card" data-admin-only="true">
+                        <span class="fe-metric-label">Segnalazioni</span>
+                        <strong id="fe-metric-reports">—</strong>
+                        <small>da controllare</small>
+                    </article>
+                </div>
+
+                <div class="fe-dashboard-lower">
+                    <section class="admin-card fe-dashboard-guide">
+                        <div class="fe-section-heading-row">
+                            <div>
+                                <span class="fe-section-eyebrow">FLUSSO DI LAVORO</span>
+                                <h3>Una redazione più ordinata</h3>
+                            </div>
+                        </div>
+                        <div class="fe-workflow-steps">
+                            <div><span>01</span><strong>Scrivi</strong><p>Prepara titolo, testo, media e categoria in un unico editor.</p></div>
+                            <div><span>02</span><strong>Revisiona</strong><p>Controlla lo stato e, quando richiesto, passa dall’approvazione.</p></div>
+                            <div><span>03</span><strong>Pubblica</strong><p>Porta online il contenuto e continua a gestirlo dall’archivio.</p></div>
+                        </div>
+                    </section>
+
+                    <aside class="admin-card fe-dashboard-shortcuts">
+                        <span class="fe-section-eyebrow">SCORCIATOIE</span>
+                        <button type="button" data-fe-open-tab="tab-editor"><span>Editor</span><small>Crea o modifica un articolo</small></button>
+                        <button type="button" data-fe-open-tab="tab-manage-articles"><span>Archivio</span><small>Controlla i contenuti</small></button>
+                        <button type="button" data-fe-open-tab="tab-moderation" data-admin-only="true"><span>Moderazione</span><small>Gestisci la community</small></button>
+                    </aside>
+                </div>
+            </div>
+
             <!-- TAB 1: EDITOR ARTICOLO -->
-            <div id="tab-editor" class="admin-tab-content">
+            <div id="tab-editor" class="admin-tab-content hidden">
                 <form id="form-admin-article" class="admin-card">
                     <input type="hidden" id="admin-article-id" value="">
                     
@@ -235,28 +324,46 @@
                         <input type="text" id="admin-article-excerpt" class="input-field" maxlength="220" placeholder="Riassumi l'articolo in una o due frasi incisive..." required>
                     </div>
 
-                    <!-- CARICAMENTO IMMAGINE PRINCIPALE E CERCHIETTI -->
-                    <div class="form-group">
-                        <label>Immagine Principale / Copertina & Cerchietti Cliccabili *</label>
-                        <div class="upload-controls">
-                            <input type="file" id="admin-image-file" accept="image/*" class="input-file">
-                            <span class="or-divider">oppure incolla URL immagine:</span>
-                            <input type="url" id="admin-image-url" class="input-field" placeholder="https://...">
+                    <!-- COPERTINA ARTICOLO / MEDIA PRINCIPALE -->
+                    <div class="form-group fe-cover-field">
+                        <div class="fe-field-heading">
+                            <div>
+                                <span class="fe-field-eyebrow">MEDIA PRINCIPALE</span>
+                                <label for="admin-image-file">Copertina articolo *</label>
+                            </div>
+                            <span class="fe-field-status">JPG · PNG · WEBP</span>
                         </div>
-                        <p class="field-help">
-                            💡 <strong>Come aggiungere i cerchietti sui vestiti:</strong> Una volta apparsa l'anteprima della foto qui sotto, <strong>clicca (o tocca da iPhone) esattamente sul vestito/accessorio</strong> per fissare il cerchietto e inserire il link diretto al negozio!
+
+                        <div class="fe-cover-upload-card">
+                            <label class="fe-upload-dropzone fe-upload-dropzone-cover" for="admin-image-file">
+                                <span class="fe-upload-icon" aria-hidden="true">
+                                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 16.5V19a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-2.5"/><path d="M12 4v11"/><path d="m8 8 4-4 4 4"/></svg>
+                                </span>
+                                <span class="fe-upload-copy">
+                                    <strong>Carica la copertina</strong>
+                                    <small>Trascina o scegli un'immagine dal dispositivo · massimo 12 MB</small>
+                                </span>
+                                <span class="fe-upload-action">Scegli file</span>
+                            </label>
+                            <input type="file" id="admin-image-file" accept="image/*" class="input-file fe-native-file-input">
+
+                            <div class="fe-media-divider"><span>oppure usa un link</span></div>
+                            <div class="fe-media-url-row">
+                                <input type="url" id="admin-image-url" class="input-field" placeholder="https://esempio.it/copertina.jpg" aria-label="URL immagine di copertina">
+                            </div>
+                        </div>
+
+                        <p class="field-help fe-hotspot-help">
+                            Per gli outfit puoi aggiungere i punti cliccabili direttamente sull'anteprima della copertina dopo il caricamento.
                         </p>
 
-                        <!-- Palcoscenico Editor Interattivo -->
                         <div id="admin-hotspot-workspace" class="admin-hotspot-workspace hidden">
                             <div id="admin-image-preview-box" class="interactive-image-container admin-preview-cursor">
-                                <img id="admin-preview-img" src="" alt="Anteprima caricamento" class="article-main-image">
+                                <img id="admin-preview-img" src="" alt="Anteprima copertina" class="article-main-image">
                                 <div id="admin-hotspots-layer" class="hotspots-layer"></div>
                             </div>
-
-                            <!-- Lista dei cerchietti inseriti -->
                             <div class="admin-hotspots-list-box">
-                                <h4>Cerchietti attivi sulla foto (<span id="admin-hotspots-count">0</span>)</h4>
+                                <h4>Punti prodotto <span id="admin-hotspots-count">0</span></h4>
                                 <div id="admin-hotspots-items" class="admin-hotspots-items"></div>
                             </div>
                         </div>
@@ -323,7 +430,7 @@
                 </div>
             </div>
 
-            <!-- TAB 4: MODERAZIONE COMMENTI -->
+            <!-- TAB 3: MODERAZIONE COMMENTI -->
             <div id="tab-moderation" class="admin-tab-content hidden" data-admin-only="true">
                 <div class="admin-card">
                     <h3>Commenti Segnalati dagli Utenti</h3>
@@ -498,24 +605,24 @@
         </div>
     </div>
 
-    <!-- FOOTER EDITORIALE -->
+    <!-- FOOTER MINIMALISTA -->
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
-                <strong>FUORI ETICHETTA</strong> — Digital Fashion & Outfit Journal
+                <span class="footer-monogram">FE</span>
+                <div><strong>FUORI ETICHETTA</strong><small>Independent Fashion Journal</small></div>
             </div>
             <div class="footer-links">
+                <span>Moda · Cultura · Outfit · Opinioni</span>
                 <span>Registrazione riservata ai maggiori di 16 anni</span>
-                <span>•</span>
-                <span>Atelier Editorial Design</span>
+                <span>© 2026 Fuori Etichetta</span>
             </div>
         </div>
     </footer>
 
     <!-- Script Principale dell'Applicazione -->
     <script src="app.js"></script>
-    <!-- Motore Editoriale, Dashboard Admin/Collaboratore e Layout iSpazio -->
-    <script src="extensions.js?v=6" defer></script>
-    <link rel="stylesheet" href="style.css?v=8">
+    <!-- Moduli aggiuntivi e aggiornamenti futuri -->
+    <script src="extensions.js?v=7" defer></script>
 </body>
 </html>
