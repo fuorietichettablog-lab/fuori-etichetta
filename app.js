@@ -106,10 +106,10 @@ function collaboratorCanPublishDirectly() {
 }
 
 function getArticleStatusLabel(article) {
-    if (article?.approval_status === 'pending') return '🟡 In attesa di approvazione';
-    if (article?.published) return '🟢 Pubblicato';
-    if (article?.approval_status === 'approved') return '⚪ Approvato ma non pubblicato';
-    return '🟠 Bozza';
+    if (article?.approval_status === 'pending') return 'In revisione';
+    if (article?.published) return 'Pubblicato';
+    if (article?.approval_status === 'approved') return 'Approvato · non pubblicato';
+    return 'Bozza';
 }
 
 async function loadEditorialSettings() {
@@ -853,30 +853,32 @@ function renderCatalogGrid() {
 
     emptyEl.classList.add('hidden');
 
-    gridEl.innerHTML = filtered.map((art) => {
+    gridEl.innerHTML = filtered.map((art, index) => {
         const likesCount = art.article_likes?.[0]?.count || 0;
         const commentsCount = art.comments?.[0]?.count || 0;
         const { pins, gallery, videoUrl } = parseArticleMedia(art);
         const totalPhotos = 1 + gallery.length;
+        const wordCount = (art.content || '').trim().split(/\s+/).filter(Boolean).length;
+        const readMinutes = Math.max(1, Math.ceil(wordCount / 180));
 
         const badgesHTML = [];
         if (pins.length > 0) {
-            badgesHTML.push(`● <span>${pins.length} ${pins.length === 1 ? 'capo cliccabile' : 'capi cliccabili'}</span>`);
+            badgesHTML.push(`<span class="fe-media-chip">SHOP · ${pins.length}</span>`);
         }
         if (totalPhotos > 1) {
-            badgesHTML.push(`📸 <span>${totalPhotos} foto</span>`);
+            badgesHTML.push(`<span class="fe-media-chip">PHOTO · ${totalPhotos}</span>`);
         }
         if (videoUrl) {
-            badgesHTML.push(`🎬 <span>Video</span>`);
+            badgesHTML.push(`<span class="fe-media-chip">VIDEO</span>`);
         }
 
         return `
-            <article class="article-card" data-article-id="${escapeHTML(art.id)}">
+            <article class="article-card ${index === 0 ? 'article-card--featured' : ''}" data-article-id="${escapeHTML(art.id)}">
                 <div class="card-thumb-wrapper">
                     <img src="${escapeHTML(art.cover_image)}" alt="${escapeHTML(art.title)}" class="card-thumb" loading="lazy">
                     ${badgesHTML.length > 0 ? `
                         <div class="card-shop-badge" title="Contenuti multimediali e interattivi">
-                            ${badgesHTML.join(' &nbsp;•&nbsp; ')}
+                            ${badgesHTML.join('')}
                         </div>
                     ` : ''}
                 </div>
@@ -893,7 +895,8 @@ function renderCatalogGrid() {
                             <span>♥ ${likesCount}</span>
                             <span>💬 ${commentsCount}</span>
                         </div>
-                        <span class="card-read-more">Esplora →</span>
+                        <span class="card-read-time">${readMinutes} min</span>
+                        <span class="card-read-more">Leggi <span aria-hidden="true">↗</span></span>
                     </div>
                 </div>
             </article>
