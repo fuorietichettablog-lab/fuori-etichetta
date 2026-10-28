@@ -4,30 +4,34 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>Fuori Etichetta — Moda, Outfit & Tendenze</title>
-    <meta name="description" content="Fuori Etichetta: il blog editoriale dedicato alle ultime novità della moda, tendenze e consigli di outfit interattivi.">
+    <meta name="description" content="Fuori Etichetta: il magazine digitale dedicato alle ultime novità della moda, tendenze e consigli di outfit interattivi.">
     <link rel="manifest" href="manifest.json">
-    <!-- Font Inter -->
+    <!-- Font Editoriali: Inter, Plus Jakarta Sans & Instrument Serif -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
     
-    <!-- Foglio di stile Cupertino Editorial -->
-    <link rel="stylesheet" href="style.css?v=5">
+    <!-- Foglio di stile Cupertino Editorial & Studio CMS -->
+    <link rel="stylesheet" href="style.css?v=6">
     
     <!-- Libreria Ufficiale Supabase JS v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
+    <!-- BARRA DI PROGRESSO LETTURA ARTICOLO -->
+    <div id="fe-reading-progress-bar" class="fe-reading-progress-bar" aria-hidden="true"></div>
+
     <!-- NOTIFICHE TOAST -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
 
-    <!-- HEADER GLASSMORPHISM STILE APPLE -->
+    <!-- HEADER GLASSMORPHISM STILE APPLE MAGAZINE -->
     <header class="site-header">
         <div class="header-inner">
             <a href="#" id="logo-link" class="brand-logo" aria-label="Torna alla Homepage">
                 <span class="brand-dot"></span>
-                FUORI ETICHETTA
+                <span class="brand-text">FUORI ETICHETTA</span>
+                <span class="brand-edition">JOURNAL</span>
             </a>
 
             <!-- Navigazione Categorie -->
@@ -49,8 +53,8 @@
                     <input type="search" id="search-input" class="search-input" placeholder="Cerca outfit, brand..." aria-label="Cerca articoli">
                 </div>
 
-                <!-- Bottone Pannello Admin -->
-                <button id="btn-open-admin" class="btn-secondary hidden" title="Pannello di Controllo Admin">
+                <!-- Bottone Pannello Admin / Studio Collaboratore -->
+                <button id="btn-open-admin" class="btn-secondary fe-btn-studio hidden" title="Apri Studio Redazionale">
                     <span>Admin</span>
                     <span id="admin-report-badge" class="badge-alert hidden">0</span>
                 </button>
@@ -70,10 +74,11 @@
     <!-- CONTENITORE PRINCIPALE -->
     <main class="main-container">
 
-        <!-- VISTA 1: CATALOGO COMPATTO (HOMEPAGE) -->
+        <!-- VISTA 1: CATALOGO EDITORIALE (HOMEPAGE) -->
         <section id="view-home" class="view-section">
             <div class="catalog-header">
-                <div>
+                <div class="catalog-heading-group">
+                    <span class="catalog-eyebrow">CURATED FASHION ARCHIVE</span>
                     <h1 id="catalog-title" class="catalog-title">Esplora il Catalogo</h1>
                     <p id="catalog-subtitle" class="catalog-subtitle">Ultime novità, analisi di stile e outfit interattivi cliccabili.</p>
                 </div>
@@ -92,7 +97,7 @@
                 <button id="btn-reset-filters" class="btn-secondary">Mostra tutti gli articoli</button>
             </div>
 
-            <!-- Griglia Compatta Articoli -->
+            <!-- Griglia Articoli (Con Hero Cover Story automatica) -->
             <div id="articles-grid" class="articles-grid"></div>
         </section>
 
@@ -180,7 +185,7 @@
             </section>
         </article>
 
-        <!-- VISTA 3: PANNELLO AMMINISTRATIVO PROTETTO -->
+        <!-- VISTA 3: STUDIO EDITORIALE & CMS (ADMIN + REDAZIONE COLLABORATORI) -->
         <section id="view-admin" class="view-section hidden">
             <div class="admin-top-bar">
                 <div>
@@ -318,7 +323,7 @@
                 </div>
             </div>
 
-            <!-- TAB 3: MODERAZIONE COMMENTI -->
+            <!-- TAB 4: MODERAZIONE COMMENTI -->
             <div id="tab-moderation" class="admin-tab-content hidden" data-admin-only="true">
                 <div class="admin-card">
                     <h3>Commenti Segnalati dagli Utenti</h3>
@@ -493,7 +498,7 @@
         </div>
     </div>
 
-    <!-- FOOTER MINIMALISTA -->
+    <!-- FOOTER EDITORIALE -->
     <footer class="site-footer">
         <div class="footer-inner">
             <div class="footer-brand">
@@ -502,14 +507,14 @@
             <div class="footer-links">
                 <span>Registrazione riservata ai maggiori di 16 anni</span>
                 <span>•</span>
-                <span>Design Cupertino Editorial</span>
+                <span>Atelier Editorial Design</span>
             </div>
         </div>
     </footer>
 
     <!-- Script Principale dell'Applicazione -->
     <script src="app.js"></script>
-    <!-- Moduli aggiuntivi e aggiornamenti futuri -->
-    <script src="extensions.js?v=5" defer></script>
+    <!-- Motore Editoriale, Dashboard Admin/Collaboratore e Layout iSpazio -->
+    <script src="extensions.js?v=6" defer></script>
 </body>
 </html>
