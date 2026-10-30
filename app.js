@@ -693,6 +693,67 @@ function openImageLightbox(srcUrl) {
 }
 
 // ============================================================================
+// MEMBER GATE — ACCESSO RISERVATO AL MAGAZINE
+// ============================================================================
+
+function showAuthGateNotice(message, type = 'info') {
+    const box = document.getElementById('fe-auth-status');
+    if (!box) return;
+    if (!message) {
+        box.textContent = '';
+        box.className = 'fe-auth-status hidden';
+        return;
+    }
+    box.textContent = message;
+    box.className = `fe-auth-status fe-auth-status--${type}`;
+}
+
+function setAuthGateState(isUnlocked) {
+    const gate = document.getElementById('modal-auth');
+    document.body.classList.remove('fe-auth-pending');
+    document.body.classList.toggle('fe-auth-locked', !isUnlocked);
+    document.body.classList.toggle('fe-auth-unlocked', isUnlocked);
+
+    if (gate) {
+        gate.classList.toggle('hidden', isUnlocked);
+        gate.setAttribute('aria-hidden', isUnlocked ? 'true' : 'false');
+    }
+
+    if (!isUnlocked) {
+        document.getElementById('modal-profile')?.classList.add('hidden');
+        document.getElementById('view-admin')?.classList.add('hidden');
+        window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+}
+
+function resetLockedCatalog() {
+    state.articles = [];
+    state.activeArticle = null;
+    const grid = document.getElementById('articles-grid');
+    const count = document.getElementById('articles-count');
+    const loading = document.getElementById('catalog-loading');
+    if (grid) grid.innerHTML = '';
+    if (count) count.textContent = '0 articoli';
+    if (loading) loading.classList.add('hidden');
+}
+
+function setAuthPanelCopy(mode) {
+    const title = document.getElementById('auth-modal-title');
+    const copy = document.getElementById('fe-auth-panel-copy');
+    if (!title || !copy) return;
+
+    const content = {
+        login: ['Bentornato.', 'Accedi per entrare nel magazine.'],
+        register: ['Entra nella community.', 'Crea il tuo account gratuito per accedere a Fuori Etichetta.'],
+        reset: ['Recupera l’accesso.', 'Ti invieremo un link sicuro per impostare una nuova password.'],
+        'update-password': ['Nuova password.', 'Scegli una nuova password per completare il recupero dell’account.']
+    };
+    const selected = content[mode] || content.login;
+    title.textContent = selected[0];
+    copy.textContent = selected[1];
+}
+
+// ============================================================================
 // INIZIALIZZAZIONE E AUTENTICAZIONE
 // ============================================================================
 
@@ -722,31 +783,48 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
 
-    // 4. Carica sessione iniziale con gestione errori garantita
+    // 4. Il sito resta bloccato finché Supabase non conferma una sessione valida.
+    setAuthGateState(false);
     try {
         const { data: { session }, error: sessionError } = await supabaseClient.auth.getSession();
         if (sessionError) {
             console.error('Errore lettura sessione:', sessionError);
         }
         await refreshUserSession(session?.user || null);
+        if (state.currentUser && state.currentProfile) {
+            await loadCatalogArticles();
+        } else {
+            resetLockedCatalog();
+            openAuthModal('login');
+        }
     } catch (err) {
         console.error('Errore imprevisto durante il recupero sessione:', err);
+        setAuthGateState(false);
+        openAuthModal('login');
     }
 
-    // 5. Listener per i cambi di stato successivi (login, logout, recupero password)
+    // 5. Login/logout/recupero password aggiornano immediatamente il Member Gate.
     supabaseClient.auth.onAuthStateChange(async (event, session) => {
         if (event === 'INITIAL_SESSION') return;
         if (event === 'PASSWORD_RECOVERY') {
+            setAuthGateState(false);
             openAuthModal('update-password');
+            return;
         }
-        await refreshUserSession(session?.user || null);
-    });
 
-    // 6. Carica il catalogo articoli
-    await loadCatalogArticles();
+        await refreshUserSession(session?.user || null);
+        if (session?.user && state.currentProfile) {
+            await loadCatalogArticles();
+            switchMainView('view-home');
+        } else {
+            resetLockedCatalog();
+            openAuthModal('login');
+        }
+    });
 });
 
 async function refreshUserSession(user) {
+    setAuthGateState(false);
     state.currentUser = user;
     state.currentProfile = null;
     state.isAdmin = false;
@@ -761,6 +839,8 @@ async function refreshUserSession(user) {
         btnOpenAuth.classList.remove('hidden');
         btnOpenProfile.classList.add('hidden');
         btnOpenAdmin.classList.add('hidden');
+        resetLockedCatalog();
+        setAuthGateState(false);
         updateCommentBoxVisibility();
         return;
     }
@@ -776,6 +856,8 @@ async function refreshUserSession(user) {
             btnOpenAuth.classList.remove('hidden');
             btnOpenProfile.classList.add('hidden');
             btnOpenAdmin.classList.add('hidden');
+            setAuthGateState(false);
+            showAuthGateNotice('Account autenticato, ma il profilo non è ancora disponibile. Riprova tra qualche secondo.', 'error');
             updateCommentBoxVisibility();
             return;
         }
@@ -805,11 +887,15 @@ async function refreshUserSession(user) {
 
         applyEditorialPanelRoleUI();
         updateCommentBoxVisibility();
+        showAuthGateNotice('');
+        setAuthGateState(true);
     } catch (err) {
         console.error('Errore caricamento profilo utente:', err);
         btnOpenAuth.classList.remove('hidden');
         btnOpenProfile.classList.add('hidden');
         btnOpenAdmin.classList.add('hidden');
+        setAuthGateState(false);
+        showAuthGateNotice('Non è stato possibile completare l’accesso. Riprova.', 'error');
     }
 }
 
@@ -818,6 +904,11 @@ async function refreshUserSession(user) {
 // ============================================================================
 
 async function loadCatalogArticles() {
+    if (!state.currentUser || !state.currentProfile) {
+        resetLockedCatalog();
+        return;
+    }
+
     const loadingEl = document.getElementById('catalog-loading');
     const gridEl = document.getElementById('articles-grid');
     if (loadingEl) loadingEl.classList.remove('hidden');
@@ -1938,6 +2029,11 @@ async function loadAdminCollaboratorsData() {
 // ============================================================================
 
 function switchMainView(viewId) {
+    if (!state.currentUser || !state.currentProfile) {
+        setAuthGateState(false);
+        openAuthModal('login');
+        return;
+    }
     ['view-home', 'view-article', 'view-admin'].forEach((id) => {
         document.getElementById(id).classList.add('hidden');
     });
@@ -1945,34 +2041,37 @@ function switchMainView(viewId) {
 }
 
 function openAuthModal(mode = 'login') {
-    const modal = document.getElementById('modal-auth');
+    const gate = document.getElementById('modal-auth');
     const tabsBar = document.getElementById('auth-tabs-bar');
-    modal.classList.remove('hidden');
+    if (!gate || !tabsBar) return;
+
+    setAuthGateState(false);
+    gate.classList.remove('hidden');
+    showAuthGateNotice('');
 
     ['form-login', 'form-register', 'form-reset-request', 'form-update-password'].forEach((id) => {
-        document.getElementById(id).classList.add('hidden');
+        document.getElementById(id)?.classList.add('hidden');
     });
 
     document.querySelectorAll('.segment-btn').forEach((b) => b.classList.remove('active'));
+    setAuthPanelCopy(mode);
 
     if (mode === 'login') {
         tabsBar.classList.remove('hidden');
-        document.getElementById('auth-modal-title').textContent = 'Accedi a Fuori Etichetta';
-        document.getElementById('form-login').classList.remove('hidden');
-        document.querySelector('[data-auth-view="login"]').classList.add('active');
+        document.getElementById('form-login')?.classList.remove('hidden');
+        document.querySelector('[data-auth-view="login"]')?.classList.add('active');
+        window.setTimeout(() => document.getElementById('login-email')?.focus({ preventScroll: true }), 220);
     } else if (mode === 'register') {
         tabsBar.classList.remove('hidden');
-        document.getElementById('auth-modal-title').textContent = 'Crea il tuo Account';
-        document.getElementById('form-register').classList.remove('hidden');
-        document.querySelector('[data-auth-view="register"]').classList.add('active');
+        document.getElementById('form-register')?.classList.remove('hidden');
+        document.querySelector('[data-auth-view="register"]')?.classList.add('active');
+        window.setTimeout(() => document.getElementById('reg-firstname')?.focus({ preventScroll: true }), 220);
     } else if (mode === 'reset') {
         tabsBar.classList.add('hidden');
-        document.getElementById('auth-modal-title').textContent = 'Recupera la tua Password';
-        document.getElementById('form-reset-request').classList.remove('hidden');
+        document.getElementById('form-reset-request')?.classList.remove('hidden');
     } else if (mode === 'update-password') {
         tabsBar.classList.add('hidden');
-        document.getElementById('auth-modal-title').textContent = 'Imposta Nuova Password';
-        document.getElementById('form-update-password').classList.remove('hidden');
+        document.getElementById('form-update-password')?.classList.remove('hidden');
     }
 }
 
@@ -2070,6 +2169,7 @@ function bindUIEvents() {
     document.getElementById('btn-open-auth').addEventListener('click', () => openAuthModal('login'));
     document.getElementById('btn-prompt-login').addEventListener('click', () => openAuthModal('login'));
     document.getElementById('btn-close-auth').addEventListener('click', () => {
+        if (!state.currentUser || !state.currentProfile) return;
         document.getElementById('modal-auth').classList.add('hidden');
     });
 
@@ -2084,14 +2184,29 @@ function bindUIEvents() {
         e.preventDefault();
         const email = document.getElementById('login-email').value.trim();
         const password = document.getElementById('login-password').value;
+        const submit = document.getElementById('btn-submit-login');
+        const originalLabel = submit.textContent;
 
-        const { error } = await supabaseClient.auth.signInWithPassword({ email, password });
-        if (error) {
-            showToast('Credenziali non valide oppure email non ancora verificata.');
-            return;
+        submit.disabled = true;
+        submit.textContent = 'Accesso in corso…';
+        showAuthGateNotice('');
+
+        try {
+            const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+            if (error || !data?.user) {
+                showAuthGateNotice('Email o password non corretti, oppure email non ancora verificata.', 'error');
+                return;
+            }
+
+            await refreshUserSession(data.user);
+            if (!state.currentProfile) return;
+            await loadCatalogArticles();
+            switchMainView('view-home');
+            showToast('Bentornato su Fuori Etichetta!');
+        } finally {
+            submit.disabled = false;
+            submit.textContent = originalLabel;
         }
-        document.getElementById('modal-auth').classList.add('hidden');
-        showToast('Bentornato su Fuori Etichetta!');
     });
 
     document.getElementById('form-register').addEventListener('submit', async (e) => {
@@ -2108,27 +2223,48 @@ function bindUIEvents() {
             return;
         }
 
-        const { error } = await supabaseClient.auth.signUp({
-            email,
-            password,
-            options: {
-                data: {
-                    first_name: firstName,
-                    last_name: lastName,
-                    phone: phone,
-                    birth_date: birthDate,
-                    avatar_url: ''
+        const submit = document.getElementById('btn-submit-register');
+        const originalLabel = submit.textContent;
+        submit.disabled = true;
+        submit.textContent = 'Creazione account…';
+        showAuthGateNotice('');
+
+        try {
+            const { data, error } = await supabaseClient.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        first_name: firstName,
+                        last_name: lastName,
+                        phone: phone,
+                        birth_date: birthDate,
+                        avatar_url: ''
+                    }
+                }
+            });
+
+            if (error) {
+                showAuthGateNotice(`Registrazione non riuscita: ${error.message}`, 'error');
+                return;
+            }
+
+            if (data?.session?.user) {
+                await refreshUserSession(data.session.user);
+                if (state.currentProfile) {
+                    await loadCatalogArticles();
+                    switchMainView('view-home');
+                    showToast('Benvenuto su Fuori Etichetta!');
+                    return;
                 }
             }
-        });
 
-        if (error) {
-            showToast(`Errore registrazione: ${error.message}`);
-            return;
+            openAuthModal('login');
+            showAuthGateNotice('Account creato. Controlla la tua email e conferma l’indirizzo, poi torna qui per accedere.', 'success');
+        } finally {
+            submit.disabled = false;
+            submit.textContent = originalLabel;
         }
-
-        document.getElementById('modal-auth').classList.add('hidden');
-        showToast('Registrazione completata! Controlla la tua email per cliccare il link di verifica.');
     });
 
     document.getElementById('form-reset-request').addEventListener('submit', async (e) => {
@@ -2139,8 +2275,8 @@ function bindUIEvents() {
             showToast(`Errore: ${error.message}`);
             return;
         }
-        document.getElementById('modal-auth').classList.add('hidden');
-        showToast('Ti abbiamo inviato un\'email con il link per reimpostare la password.');
+        openAuthModal('login');
+        showAuthGateNotice('Email inviata. Apri il link ricevuto per reimpostare la password.', 'success');
     });
 
     document.getElementById('form-update-password').addEventListener('submit', async (e) => {
@@ -2151,7 +2287,14 @@ function bindUIEvents() {
             showToast(`Errore: ${error.message}`);
             return;
         }
-        document.getElementById('modal-auth').classList.add('hidden');
+        const { data: { user } } = await supabaseClient.auth.getUser();
+        if (user) {
+            await refreshUserSession(user);
+            if (state.currentProfile) {
+                await loadCatalogArticles();
+                switchMainView('view-home');
+            }
+        }
         showToast('Password aggiornata con successo!');
     });
 
