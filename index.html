@@ -12,7 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Foglio di stile Cupertino Editorial -->
-    <link rel="stylesheet" href="style.css?v=10">
+    <link rel="stylesheet" href="style.css?v=11">
     
     <!-- Libreria Ufficiale Supabase JS v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -455,62 +455,63 @@
 
     </main>
 
-    <!-- PREPAGINA ACCESSO RISERVATO -->
-    <section id="modal-auth" class="fe-auth-gate" aria-labelledby="auth-modal-title">
-        <div class="fe-gate-ambient" aria-hidden="true">
-            <span class="fe-gate-orb fe-gate-orb-a"></span>
-            <span class="fe-gate-orb fe-gate-orb-b"></span>
-            <span class="fe-gate-orb fe-gate-orb-c"></span>
-            <span class="fe-gate-grid"></span>
-        </div>
+    <!-- PREPAGINA ACCESSO RISERVATO — V11 FASHION EDITORIAL -->
+    <section id="modal-auth" class="fe-auth-gate fe-fashion-gate" aria-labelledby="auth-modal-title">
+        <div class="fe-fashion-grain" aria-hidden="true"></div>
 
-        <div class="fe-gate-shell">
-            <section class="fe-gate-story" aria-label="Fuori Etichetta">
-                <div class="fe-gate-brandline">
-                    <span class="fe-gate-brandmark">FE</span>
-                    <span>FUORI ETICHETTA</span>
-                    <span class="fe-gate-edition">MEMBERS JOURNAL · 2026</span>
+        <header class="fe-fashion-masthead">
+            <div class="fe-fashion-wordmark">FUORI ETICHETTA</div>
+            <div class="fe-fashion-issue">INDEPENDENT FASHION JOURNAL <span>—</span> PRIVATE EDITION 2026</div>
+        </header>
+
+        <div class="fe-fashion-stage">
+            <section class="fe-fashion-editorial" aria-label="Fuori Etichetta — Fashion Journal">
+                <div class="fe-fashion-title-wrap">
+                    <span class="fe-fashion-kicker">THE PRIVATE ISSUE · Nº 01</span>
+                    <h1>
+                        <span class="fe-title-line fe-title-line-1">FUORI</span>
+                        <span class="fe-title-line fe-title-line-2">ETICHETTA</span>
+                    </h1>
+                    <p class="fe-fashion-manifesto">Moda, cultura e identità senza il filtro delle etichette.</p>
                 </div>
 
-                <div class="fe-gate-copy">
-                    <span class="fe-gate-kicker">INDEPENDENT FASHION JOURNAL</span>
-                    <h1>La moda non ha bisogno di un'altra <em>etichetta.</em></h1>
-                    <p>Entra nel magazine riservato alla community di Fuori Etichetta. Articoli, outfit, analisi e cultura fashion diventano accessibili dopo la registrazione.</p>
-                    <div class="fe-gate-benefits" aria-label="Caratteristiche del magazine">
-                        <span>Editoriali indipendenti</span>
-                        <span>Outfit interattivi</span>
-                        <span>Community privata</span>
-                    </div>
+                <div class="fe-fashion-collage" aria-hidden="true">
+                    <figure class="fe-fashion-shot fe-fashion-shot-main">
+                        <img src="https://images.unsplash.com/photo-1779400202006-9843db5f16cb?auto=format&fit=crop&w=1200&q=86" alt="">
+                        <figcaption><span>01</span> NEW SILHOUETTES</figcaption>
+                    </figure>
+                    <figure class="fe-fashion-shot fe-fashion-shot-top">
+                        <img src="https://images.unsplash.com/photo-1779399147716-a3ca1e519406?auto=format&fit=crop&w=900&q=86" alt="">
+                        <figcaption><span>02</span> TEXTURE / BLACK</figcaption>
+                    </figure>
+                    <figure class="fe-fashion-shot fe-fashion-shot-bottom">
+                        <img src="https://images.unsplash.com/photo-1779398645852-b7a98f0cb7c3?auto=format&fit=crop&w=900&q=86" alt="">
+                        <figcaption><span>03</span> AFTER RUNWAY</figcaption>
+                    </figure>
                 </div>
 
-                <div class="fe-gate-showcase" aria-hidden="true">
-                    <article class="fe-gate-float-card fe-gate-card-one">
-                        <span>01 / EDITORIAL</span>
-                        <strong>Beyond the label</strong>
-                        <small>Stories · Culture · Fashion</small>
-                    </article>
-                    <article class="fe-gate-float-card fe-gate-card-two">
-                        <span>02 / COMMUNITY</span>
-                        <strong>Read. React. Discuss.</strong>
-                        <small>Members only</small>
-                    </article>
-                    <div class="fe-gate-monogram">F/E</div>
-                </div>
+                <div class="fe-fashion-side-note fe-fashion-side-note-left" aria-hidden="true">EDITORIAL · OUTFIT · CULTURE</div>
+                <div class="fe-fashion-side-note fe-fashion-side-note-right" aria-hidden="true">READ / REACT / DISCUSS</div>
 
-                <div class="fe-gate-ticker">
-                    <div class="fe-gate-ticker-track">
-                        <span>FASHION</span><i></i><span>EDITORIAL</span><i></i><span>OUTFIT</span><i></i><span>CULTURE</span><i></i><span>INDEPENDENT</span><i></i>
-                        <span>FASHION</span><i></i><span>EDITORIAL</span><i></i><span>OUTFIT</span><i></i><span>CULTURE</span><i></i><span>INDEPENDENT</span><i></i>
+                <div class="fe-fashion-marquee" aria-hidden="true">
+                    <div class="fe-fashion-marquee-track">
+                        <span>RUNWAY</span><i>✦</i><span>EDITORIAL</span><i>✦</i><span>STREET STYLE</span><i>✦</i><span>DESIGN</span><i>✦</i><span>CULTURE</span><i>✦</i><span>OPINION</span><i>✦</i>
+                        <span>RUNWAY</span><i>✦</i><span>EDITORIAL</span><i>✦</i><span>STREET STYLE</span><i>✦</i><span>DESIGN</span><i>✦</i><span>CULTURE</span><i>✦</i><span>OPINION</span><i>✦</i>
                     </div>
                 </div>
             </section>
 
-            <aside class="fe-gate-auth-wrap">
-                <div class="fe-gate-auth-glass">
+            <aside class="fe-fashion-auth-wrap">
+                <div class="fe-fashion-auth-card">
+                    <div class="fe-fashion-auth-topline">
+                        <span>ACCESSO LETTORI</span>
+                        <span>FE / MEMBERS</span>
+                    </div>
+
                     <div class="fe-gate-auth-heading">
-                        <span class="fe-gate-auth-eyebrow">ACCESSO RISERVATO</span>
+                        <span class="fe-gate-auth-eyebrow">PRIVATE JOURNAL</span>
                         <h2 id="auth-modal-title">Bentornato.</h2>
-                        <p id="fe-auth-panel-copy">Accedi per entrare nel magazine.</p>
+                        <p id="fe-auth-panel-copy">Accedi per sfogliare il nuovo numero.</p>
                     </div>
 
                     <button id="btn-close-auth" class="btn-icon-close fe-gate-close hidden" type="button" aria-label="Chiudi">&times;</button>
@@ -535,8 +536,8 @@
                         <div class="auth-extra-links">
                             <button type="button" id="btn-goto-reset" class="link-button">Password dimenticata?</button>
                         </div>
-                        <button type="submit" id="btn-submit-login" class="btn-primary btn-full fe-gate-submit">Entra in Fuori Etichetta</button>
-                        <p class="fe-gate-form-note">Il magazine è accessibile esclusivamente agli utenti registrati.</p>
+                        <button type="submit" id="btn-submit-login" class="btn-primary btn-full fe-gate-submit">Entra nel magazine</button>
+                        <p class="fe-gate-form-note">Fuori Etichetta è riservato ai lettori registrati.</p>
                     </form>
 
                     <!-- FORM REGISTRAZIONE -->
@@ -569,7 +570,7 @@
                             <label for="reg-password">Password *</label>
                             <input type="password" id="reg-password" class="input-field" placeholder="Minimo 8 caratteri" required minlength="8" autocomplete="new-password">
                         </div>
-                        <p class="privacy-note fe-gate-privacy">Registrandoti accetti l'accesso riservato alla community. Nei commenti pubblici del magazine saranno mostrati solo nome e foto profilo. Età minima: 16 anni.</p>
+                        <p class="privacy-note fe-gate-privacy">Registrandoti accetti l'accesso riservato alla community. Nei commenti saranno mostrati solo nome e foto profilo. Età minima: 16 anni.</p>
                         <button type="submit" id="btn-submit-register" class="btn-primary btn-full fe-gate-submit">Crea il mio account</button>
                     </form>
 
@@ -594,9 +595,10 @@
                         <button type="submit" class="btn-primary btn-full fe-gate-submit">Salva nuova password</button>
                     </form>
 
-                    <div class="fe-gate-security">
-                        <span class="fe-gate-security-dot"></span>
-                        Sessione protetta tramite Supabase Auth
+                    <div class="fe-fashion-auth-footer">
+                        <span>INDEPENDENT</span>
+                        <span>NO ALGORITHMIC FEED</span>
+                        <span>EST. 2026</span>
                     </div>
                 </div>
             </aside>
