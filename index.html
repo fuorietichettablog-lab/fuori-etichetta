@@ -12,12 +12,12 @@
     <link href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:opsz,wght@6..96,500;6..96,600;6..96,700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- Foglio di stile Cupertino Editorial -->
-    <link rel="stylesheet" href="style.css?v=9">
+    <link rel="stylesheet" href="style.css?v=10">
     
     <!-- Libreria Ufficiale Supabase JS v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
+<body class="fe-auth-pending fe-auth-locked">
 
     <!-- NOTIFICHE TOAST -->
     <div id="toast-container" class="toast-container" aria-live="polite"></div>
@@ -455,98 +455,153 @@
 
     </main>
 
-    <!-- MODALE 1: AUTENTICAZIONE -->
-    <div id="modal-auth" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-        <div class="modal-card">
-            <div class="modal-header">
-                <h2 id="auth-modal-title">Accedi a Fuori Etichetta</h2>
-                <button id="btn-close-auth" class="btn-icon-close" aria-label="Chiudi">&times;</button>
-            </div>
-
-            <div class="auth-Segmented-control" id="auth-tabs-bar">
-                <button type="button" class="segment-btn active" data-auth-view="login">Accedi</button>
-                <button type="button" class="segment-btn" data-auth-view="register">Registrati</button>
-            </div>
-
-            <!-- FORM LOGIN -->
-            <form id="form-login" class="auth-form">
-                <div class="form-group">
-                    <label for="login-email">Email</label>
-                    <input type="email" id="login-email" class="input-field" placeholder="nome@esempio.it" required autocomplete="email">
-                </div>
-                <div class="form-group">
-                    <label for="login-password">Password</label>
-                    <input type="password" id="login-password" class="input-field" placeholder="La tua password" required autocomplete="current-password">
-                </div>
-                <div class="auth-extra-links">
-                    <button type="button" id="btn-goto-reset" class="link-button">Hai dimenticato la password?</button>
-                </div>
-                <button type="submit" id="btn-submit-login" class="btn-primary btn-full">Entra nel tuo account</button>
-            </form>
-
-            <!-- FORM REGISTRAZIONE -->
-            <form id="form-register" class="auth-form hidden">
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="reg-firstname">Nome * <small>(Visibile nei commenti)</small></label>
-                        <input type="text" id="reg-firstname" class="input-field" placeholder="Es. Marco" required minlength="2">
-                    </div>
-                    <div class="form-group">
-                        <label for="reg-lastname">Cognome * <small>(Privato)</small></label>
-                        <input type="text" id="reg-lastname" class="input-field" placeholder="Es. Rossi" required minlength="2">
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="reg-email">Email * <small>(Riceverai il link di verifica)</small></label>
-                    <input type="email" id="reg-email" class="input-field" placeholder="nome@esempio.it" required autocomplete="email">
-                </div>
-
-                <div class="form-row-2">
-                    <div class="form-group">
-                        <label for="reg-phone">Telefono * <small>(Privato)</small></label>
-                        <input type="tel" id="reg-phone" class="input-field" placeholder="+39 333 1234567" required minlength="6">
-                    </div>
-                    <div class="form-group">
-                        <label for="reg-birthdate">Data di nascita * <small>(Min. 16 anni)</small></label>
-                        <input type="date" id="reg-birthdate" class="input-field" required>
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label for="reg-password">Crea Password * <small>(Minimo 8 caratteri)</small></label>
-                    <input type="password" id="reg-password" class="input-field" placeholder="Almeno 8 caratteri" required minlength="8" autocomplete="new-password">
-                </div>
-
-                <p class="privacy-note">
-                    Nel rispetto della tua privacy (stile iSpazio), nei commenti pubblici compariranno <strong>esclusivamente il tuo Nome e la tua Foto Profilo</strong>. L'iscrizione è riservata ai maggiori di 16 anni.
-                </p>
-
-                <button type="submit" id="btn-submit-register" class="btn-primary btn-full">Crea Account e Verifica Email</button>
-            </form>
-
-            <!-- FORM RECUPERO PASSWORD -->
-            <form id="form-reset-request" class="auth-form hidden">
-                <p class="field-help">Inserisci l'email con cui ti sei registrato. Ti invieremo un link sicuro per scegliere una nuova password.</p>
-                <div class="form-group">
-                    <label for="reset-email">La tua Email</label>
-                    <input type="email" id="reset-email" class="input-field" placeholder="nome@esempio.it" required>
-                </div>
-                <button type="submit" class="btn-primary btn-full">Invia link di recupero</button>
-                <button type="button" id="btn-back-to-login" class="btn-secondary btn-full" style="margin-top:8px;">Torna al Login</button>
-            </form>
-
-            <!-- FORM IMPOSTA NUOVA PASSWORD -->
-            <form id="form-update-password" class="auth-form hidden">
-                <p class="field-help">Inserisci la tua nuova password per completare il recupero.</p>
-                <div class="form-group">
-                    <label for="new-reset-password">Nuova Password (min. 8 caratteri)</label>
-                    <input type="password" id="new-reset-password" class="input-field" minlength="8" required>
-                </div>
-                <button type="submit" class="btn-primary btn-full">Salva nuova password</button>
-            </form>
+    <!-- PREPAGINA ACCESSO RISERVATO -->
+    <section id="modal-auth" class="fe-auth-gate" aria-labelledby="auth-modal-title">
+        <div class="fe-gate-ambient" aria-hidden="true">
+            <span class="fe-gate-orb fe-gate-orb-a"></span>
+            <span class="fe-gate-orb fe-gate-orb-b"></span>
+            <span class="fe-gate-orb fe-gate-orb-c"></span>
+            <span class="fe-gate-grid"></span>
         </div>
-    </div>
+
+        <div class="fe-gate-shell">
+            <section class="fe-gate-story" aria-label="Fuori Etichetta">
+                <div class="fe-gate-brandline">
+                    <span class="fe-gate-brandmark">FE</span>
+                    <span>FUORI ETICHETTA</span>
+                    <span class="fe-gate-edition">MEMBERS JOURNAL · 2026</span>
+                </div>
+
+                <div class="fe-gate-copy">
+                    <span class="fe-gate-kicker">INDEPENDENT FASHION JOURNAL</span>
+                    <h1>La moda non ha bisogno di un'altra <em>etichetta.</em></h1>
+                    <p>Entra nel magazine riservato alla community di Fuori Etichetta. Articoli, outfit, analisi e cultura fashion diventano accessibili dopo la registrazione.</p>
+                    <div class="fe-gate-benefits" aria-label="Caratteristiche del magazine">
+                        <span>Editoriali indipendenti</span>
+                        <span>Outfit interattivi</span>
+                        <span>Community privata</span>
+                    </div>
+                </div>
+
+                <div class="fe-gate-showcase" aria-hidden="true">
+                    <article class="fe-gate-float-card fe-gate-card-one">
+                        <span>01 / EDITORIAL</span>
+                        <strong>Beyond the label</strong>
+                        <small>Stories · Culture · Fashion</small>
+                    </article>
+                    <article class="fe-gate-float-card fe-gate-card-two">
+                        <span>02 / COMMUNITY</span>
+                        <strong>Read. React. Discuss.</strong>
+                        <small>Members only</small>
+                    </article>
+                    <div class="fe-gate-monogram">F/E</div>
+                </div>
+
+                <div class="fe-gate-ticker">
+                    <div class="fe-gate-ticker-track">
+                        <span>FASHION</span><i></i><span>EDITORIAL</span><i></i><span>OUTFIT</span><i></i><span>CULTURE</span><i></i><span>INDEPENDENT</span><i></i>
+                        <span>FASHION</span><i></i><span>EDITORIAL</span><i></i><span>OUTFIT</span><i></i><span>CULTURE</span><i></i><span>INDEPENDENT</span><i></i>
+                    </div>
+                </div>
+            </section>
+
+            <aside class="fe-gate-auth-wrap">
+                <div class="fe-gate-auth-glass">
+                    <div class="fe-gate-auth-heading">
+                        <span class="fe-gate-auth-eyebrow">ACCESSO RISERVATO</span>
+                        <h2 id="auth-modal-title">Bentornato.</h2>
+                        <p id="fe-auth-panel-copy">Accedi per entrare nel magazine.</p>
+                    </div>
+
+                    <button id="btn-close-auth" class="btn-icon-close fe-gate-close hidden" type="button" aria-label="Chiudi">&times;</button>
+
+                    <div class="auth-Segmented-control fe-gate-segmented" id="auth-tabs-bar">
+                        <button type="button" class="segment-btn active" data-auth-view="login">Accedi</button>
+                        <button type="button" class="segment-btn" data-auth-view="register">Registrati</button>
+                    </div>
+
+                    <div id="fe-auth-status" class="fe-auth-status hidden" role="status" aria-live="polite"></div>
+
+                    <!-- FORM LOGIN -->
+                    <form id="form-login" class="auth-form fe-gate-form">
+                        <div class="form-group">
+                            <label for="login-email">Email</label>
+                            <input type="email" id="login-email" class="input-field" placeholder="nome@esempio.it" required autocomplete="email">
+                        </div>
+                        <div class="form-group">
+                            <label for="login-password">Password</label>
+                            <input type="password" id="login-password" class="input-field" placeholder="La tua password" required autocomplete="current-password">
+                        </div>
+                        <div class="auth-extra-links">
+                            <button type="button" id="btn-goto-reset" class="link-button">Password dimenticata?</button>
+                        </div>
+                        <button type="submit" id="btn-submit-login" class="btn-primary btn-full fe-gate-submit">Entra in Fuori Etichetta</button>
+                        <p class="fe-gate-form-note">Il magazine è accessibile esclusivamente agli utenti registrati.</p>
+                    </form>
+
+                    <!-- FORM REGISTRAZIONE -->
+                    <form id="form-register" class="auth-form fe-gate-form hidden">
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="reg-firstname">Nome *</label>
+                                <input type="text" id="reg-firstname" class="input-field" placeholder="Marco" required minlength="2">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-lastname">Cognome *</label>
+                                <input type="text" id="reg-lastname" class="input-field" placeholder="Rossi" required minlength="2">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-email">Email *</label>
+                            <input type="email" id="reg-email" class="input-field" placeholder="nome@esempio.it" required autocomplete="email">
+                        </div>
+                        <div class="form-row-2">
+                            <div class="form-group">
+                                <label for="reg-phone">Telefono *</label>
+                                <input type="tel" id="reg-phone" class="input-field" placeholder="+39 333 1234567" required minlength="6">
+                            </div>
+                            <div class="form-group">
+                                <label for="reg-birthdate">Data di nascita *</label>
+                                <input type="date" id="reg-birthdate" class="input-field" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-password">Password *</label>
+                            <input type="password" id="reg-password" class="input-field" placeholder="Minimo 8 caratteri" required minlength="8" autocomplete="new-password">
+                        </div>
+                        <p class="privacy-note fe-gate-privacy">Registrandoti accetti l'accesso riservato alla community. Nei commenti pubblici del magazine saranno mostrati solo nome e foto profilo. Età minima: 16 anni.</p>
+                        <button type="submit" id="btn-submit-register" class="btn-primary btn-full fe-gate-submit">Crea il mio account</button>
+                    </form>
+
+                    <!-- FORM RECUPERO PASSWORD -->
+                    <form id="form-reset-request" class="auth-form fe-gate-form hidden">
+                        <p class="field-help">Inserisci l'email associata al tuo account. Riceverai un link sicuro per scegliere una nuova password.</p>
+                        <div class="form-group">
+                            <label for="reset-email">Email</label>
+                            <input type="email" id="reset-email" class="input-field" placeholder="nome@esempio.it" required>
+                        </div>
+                        <button type="submit" class="btn-primary btn-full fe-gate-submit">Invia link di recupero</button>
+                        <button type="button" id="btn-back-to-login" class="btn-secondary btn-full fe-gate-back">Torna al login</button>
+                    </form>
+
+                    <!-- FORM IMPOSTA NUOVA PASSWORD -->
+                    <form id="form-update-password" class="auth-form fe-gate-form hidden">
+                        <p class="field-help">Scegli una nuova password di almeno 8 caratteri.</p>
+                        <div class="form-group">
+                            <label for="new-reset-password">Nuova password</label>
+                            <input type="password" id="new-reset-password" class="input-field" minlength="8" required>
+                        </div>
+                        <button type="submit" class="btn-primary btn-full fe-gate-submit">Salva nuova password</button>
+                    </form>
+
+                    <div class="fe-gate-security">
+                        <span class="fe-gate-security-dot"></span>
+                        Sessione protetta tramite Supabase Auth
+                    </div>
+                </div>
+            </aside>
+        </div>
+    </section>
 
     <!-- MODALE 2: PROFILO MINIMALE -->
     <div id="modal-profile" class="modal-backdrop hidden" role="dialog" aria-modal="true">
@@ -623,6 +678,6 @@
     <!-- Script Principale dell'Applicazione -->
     <script src="app.js"></script>
     <!-- Moduli aggiuntivi e aggiornamenti futuri -->
-    <script src="extensions.js?v=7" defer></script>
+    <script src="extensions.js?v=10" defer></script>
 </body>
 </html>
